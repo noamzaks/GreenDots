@@ -70,10 +70,17 @@ export function Header() {
       <Group h="100%" justify="space-between" wrap="nowrap">
         <Breadcrumbs style={{ minWidth: 0, flexWrap: "nowrap" }} separatorMargin={6}>
           <Anchor component={Link} href="/" fw={800} size="lg" c="green" underline="never">
-            <Group gap={6} wrap="nowrap">
-              <Box w={12} h={12} bg="green" style={{ borderRadius: "50%" }} />
-              GreenDots
-            </Group>
+            {/* centered on the capitals, which centering in the line box only does in some browsers */}
+            <Box
+              component="span"
+              display="inline-block"
+              w={12}
+              h={12}
+              mr={6}
+              bg="green"
+              style={{ borderRadius: "50%", verticalAlign: "calc((1cap - 12px) / 2)" }}
+            />
+            GreenDots
           </Anchor>
           {shown.map(([label, href]) =>
             href ? (
