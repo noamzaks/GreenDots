@@ -1,5 +1,10 @@
 # GreenDots 🟢
 
+> [!WARNING]
+> **This project is 100% vibe-coded.** Every line of it, the plugin, the web app, the tests and this README, was
+> written by an AI (Claude) from prompts, without a human writing or line-by-line reviewing the code. It's tested and
+> used, but read it with that in mind before relying on it.
+
 A live test-matrix viewer for pytest. Every test is a dot, rows and columns are test parameters, and dots fill in
 while the run is going. Hover a dot for its log tail or failure, click it for the full log, and group failures by
 their error message.
@@ -13,6 +18,12 @@ It's built for big suites (20k+ tests, logs of any size) and for run data on net
 - **[`web/`](web)**: a Next.js + Mantine app that runs on your machine. It mirrors the directories into memory,
   touching them as little as possible, and serves the UI, a single-page app that gets live updates over server-sent
   events. It also reads runs written by the original GreenDots plugin.
+
+| A run in progress | Failures grouped by error |
+| --- | --- |
+| ![A run in progress: dots fill in as tests finish](docs/screenshots/live.png) | ![Failures grouped by their error message](docs/screenshots/errors.png) |
+| **Hover a dot for its failure or log tail** | **A test's full log** |
+| ![Hovering a failed test](docs/screenshots/hover.png) | ![A test's log](docs/screenshots/log.png) |
 
 ## Getting started
 
@@ -109,7 +120,11 @@ it (it takes effect on restart).
 ## Customizing the matrix
 
 By default a test's column is its module, name and params, and the rows are the params that all parametrized tests
-share. The rows can be chosen with a fixture, which updates the plan once tests run:
+share. Tests that don't fit one matrix get several: first the tests with the row params, then, over and over, the
+tests sharing the param most of the rest have (their rows are the params they all share), and last the tests without
+params. It's all decided by the web app, so runs of either plugin version are split the same way.
+
+The rows can be chosen with a fixture, which updates the plan once tests run:
 
 ```python
 # conftest.py
