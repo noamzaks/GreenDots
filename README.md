@@ -76,7 +76,21 @@ sudo systemctl enable --now greendots
 sudo firewall-cmd --permanent --add-service=greendots && sudo firewall-cmd --reload   # if needed
 ```
 
-Its config is `/etc/greendots/config.json`, also edited on the Settings page.
+Open <http://localhost:7357> (or this machine's address from another one). Its config is
+`/etc/greendots/config.json`, also edited on the Settings page.
+
+Then write your runs into `/var/opt/greendots2/<project>/`:
+
+```bash
+pytest --greendots=/var/opt/greendots2/my-project/$(date +%Y-%m-%d_%H-%M-%S)
+```
+
+The system Python has the plugin already. A virtualenv doesn't see it, so add the plugin to the project instead,
+e.g. `uv add /path/to/GreenDots/pytest-greendots` or `pip install /path/to/GreenDots/pytest-greendots`.
+
+The build downloads Bun and the web app's dependencies, so it needs the internet. The `greendots` RPM holds native
+modules, so build it on the architecture you install it on (`FEDORA=43 packaging/fedora/build.sh` targets another
+release). Its release number is the commit count, so a newer build installs as an upgrade.
 
 ### Try it out with the demo suite
 
