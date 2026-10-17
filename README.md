@@ -124,63 +124,79 @@ share. Tests that don't fit one matrix get several: first the tests with the row
 tests sharing the param most of the rest have (their rows are the params they all share), and last the tests without
 params. It's all decided by the web app, so runs of either plugin version are split the same way.
 
-The rows can be chosen with a fixture, which updates the plan once tests run:
+### Choose the rows
 
 ```python
 # conftest.py
+import pytest
+
 @pytest.fixture(scope="session")
-def greendots_row_params():
+def greendots_row_params() -> list[str]:
     return ["arch", "os"]
 ```
 
-A test can rename itself, move to another column group or add params while it runs, with the `greendots` fixture:
+Or in `pytest.ini`: `greendots_row_params = arch os`.
+
+### Rename a test, or change its column group or params
 
 ```python
-def test_boot(board, greendots):
-    greendots.update(name="boot", module="smoke", params={"board": board.name})
-    greendots.set_row_params("board")  # for the whole run
-```
+import pytest
+from greendots import TestInfo
 
-The plan can also be shaped before it's written, with an ini option, a marker and hooks:
-
-```ini
-[pytest]
-greendots_row_params = arch os   # which params become rows
-greendots_log_level = INFO       # lowest log level recorded (default DEBUG)
-```
-
-```python
 @pytest.mark.greendots(name="boot", module="smoke", params={"board": "rpi4"})
-def test_boot_raspberry_pi_4_with_default_config(): ...
+def test_boot_rpi4_with_default_config() -> None: ...
+
+def test_boot(board: str, greendots: TestInfo) -> None:
+    greendots.update(name="boot", params={"board": board})  # while it runs
 ```
+
+### Change every test at once
 
 ```python
 # conftest.py
-@pytest.hookimpl(optionalhook=True)  # optional, so the conftest also works without the plugin
-def pytest_greendots_test(item, test):
-    test["module"] = test["module"].removeprefix("test_")  # "test_network" -> "network"
-    test["params"].pop("seed", None)                       # don't spread columns over a random seed
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
+
+if TYPE_CHECKING:
+    from greendots import PlanTest
+
+@pytest.hookimpl(optionalhook=True)  # the conftest keeps working without the plugin
+def pytest_greendots_test(item: pytest.Item, test: PlanTest) -> None:
+    test["module"] = test["module"].removeprefix("test_")  # test_network -> network
+    test["params"].pop("seed", None)  # one column, whatever the seed
 ```
 
-`test` holds `id` (the pytest node id - don't change it), `name`, `module`, `params` and `log_file`. Param values are
-shown with `str()`, or a `__greendots_format__()` (or the original `__livelog_format__()`) method if they have one.
+Params are shown with `str()`, unless their value has a `__greendots_format__()` (or `__livelog_format__()`)
+method.
 
-Report the progress of a long test with `greendots_progress` (or the original `live_progress`); running dots fill up
-like a pie:
+### Report progress
+
+Running dots fill up like a pie:
 
 ```python
-def test_flash(greendots_progress):
-    for block in greendots_progress.track(blocks):  # or greendots_progress(0.25)
-        flash(block)
+from greendots import Progress
 
-def test_steps(live_progress):
-    download, install = live_progress.split(2)  # each reports from 0 to 1
-    download.sleep(5)                           # fill over 5 seconds
-    install.done()
+def test_flash(greendots_progress: Progress) -> None:
+    for block in greendots_progress.track(range(64)):
+        ...  # flash the block
+
+def test_update(greendots_progress: Progress) -> None:
+    download, install = greendots_progress.split(2)  # each goes from 0 to 1
+    download(0.5)
+    download.done()
+    install.sleep(5)  # fills up over 5 seconds
 ```
 
-Several pytest processes (each optionally using xdist), e.g. on several machines, can write to the same run: give each
-`--greendots-worker-id=<i> --greendots-worker-count=<n>`; process 0 writes the plan.
+The original plugin's `live_progress` fixture works too.
+
+### More options
+
+- `greendots_log_level = INFO` in `pytest.ini` records only logs of that level and above (default: `DEBUG`).
+- Several pytest processes (e.g. on several machines, each optionally with xdist) can write to the same run: give
+  each `--greendots-worker-id=<i> --greendots-worker-count=<n>`. Process 0 writes the plan.
 
 ## What gets written
 

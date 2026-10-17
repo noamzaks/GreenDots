@@ -20,6 +20,7 @@ import pytest
 
 from . import hooks
 from .capture import Output, Records
+from .hooks import PlanTest
 
 T = TypeVar("T")
 PLUGIN_NAME = "greendots-writer"
@@ -169,11 +170,11 @@ class Writer:
             self.row_params = list(row_params)
             self.emit("plan_update", row_params=self.row_params)
 
-    def describe(self, item: pytest.Item) -> dict[str, Any]:
+    def describe(self, item: pytest.Item) -> PlanTest:
         callspec = getattr(item, "callspec", None)
         cls, module = getattr(item, "cls", None), getattr(item, "module", None)
         name = getattr(item, "originalname", item.name)
-        test: dict[str, Any] = {
+        test: PlanTest = {
             "id": item.nodeid,
             "name": f"{cls.__name__}.{name}" if cls else name,
             "module": module.__name__ if module else item.nodeid.split("::")[0],
@@ -205,13 +206,13 @@ class Writer:
         if self.worker != 0 or self.config.getoption("greendots_skip_plan"):
             return
         tests = [self.describe(item) for item in session.items]
-        # rows: the params shared by all parametrized tests (unparametrized ones get a row of their own)
+        # rows: the params shared by all parametrized tests (GreenDots shows the rest in matrices of their own)
         parametrized = [t for t in tests if t["params"]]
         first = parametrized[0]["params"] if parametrized else {}
         shared = [p for p in first if all(p in t["params"] for t in parametrized)]
         groups: dict[str, list[dict[str, Any]]] = {}
-        for test in tests:
-            groups.setdefault(test.pop("module"), []).append(test)
+        for test in tests:  # the original layout: tests grouped by module
+            groups.setdefault(test["module"], []).append({k: v for k, v in test.items() if k != "module"})
         plan = {
             "version": 2,
             "started_at": time.time(),

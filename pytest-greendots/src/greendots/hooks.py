@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypedDict
 
 import pytest
 
 
-def pytest_greendots_test(item: pytest.Item, test: dict[str, Any]) -> None:
-    """Customize a test's plan entry, by mutating ``test`` in place.
+class PlanTest(TypedDict):
+    """A test's entry in the plan."""
 
-    ``test`` holds ``id`` (the pytest node id - don't change it), ``name`` and ``module`` (which
-    pick the matrix column and column group), ``params`` (shown as rows or columns) and ``log_file``.
-    """
+    id: str  # the pytest node id: don't change it
+    name: str  # the matrix column...
+    module: str  # ... and column group
+    params: dict[str, Any]  # shown as rows or columns
+    log_file: str
+
+
+def pytest_greendots_test(item: pytest.Item, test: PlanTest) -> None:
+    """Customize a test's plan entry, by changing ``test`` in place."""
 
 
 def pytest_greendots_plan(session: pytest.Session, plan: dict[str, Any]) -> None:
