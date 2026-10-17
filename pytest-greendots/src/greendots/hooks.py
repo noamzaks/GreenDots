@@ -1,7 +1,13 @@
 """Hooks for customizing how tests appear in GreenDots. Implement them in a ``conftest.py``."""
 
+from __future__ import annotations
 
-def pytest_greendots_test(item, test):
+from typing import Any
+
+import pytest
+
+
+def pytest_greendots_test(item: pytest.Item, test: dict[str, Any]) -> None:
     """Customize a test's plan entry, by mutating ``test`` in place.
 
     ``test`` holds ``id`` (the pytest node id - don't change it), ``name`` and ``module`` (which
@@ -9,5 +15,5 @@ def pytest_greendots_test(item, test):
     """
 
 
-def pytest_greendots_plan(session, plan):
+def pytest_greendots_plan(session: pytest.Session, plan: dict[str, Any]) -> None:
     """Customize the whole plan before it is written, e.g. ``plan["row_params"] = ["arch"]``."""

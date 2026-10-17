@@ -15,11 +15,12 @@ import os
 import sys
 import threading
 import weakref
-from typing import Callable, Optional
+from typing import Callable, Optional, TextIO, cast
 
 #: Where captured output goes: ``sink(name, level, message, created)``.
 Sink = Callable[[str, str, str, Optional[float]], None]
 
+_libc: ctypes.CDLL | None
 try:  # to flush C stdio buffers (e.g. printf in C extensions) before switching file descriptors
     _libc = ctypes.cdll.msvcrt if sys.platform == "win32" else ctypes.CDLL(None)
 except OSError:  # pragma: no cover
@@ -29,7 +30,8 @@ except OSError:  # pragma: no cover
 def flush_streams() -> None:
     for stream in (sys.stdout, sys.stderr, sys.__stdout__, sys.__stderr__):
         try:
-            stream.flush()
+            if stream is not None:
+                stream.flush()
         except Exception:
             pass
     if _libc is not None:
@@ -50,7 +52,7 @@ def reaches_fd(stream: object, fd: int) -> bool:
     if other is not None:
         return reaches_fd(other, fd)
     try:
-        return stream.fileno() == fd  # type: ignore[attr-defined]
+        return bool(stream.fileno() == fd)  # type: ignore[attr-defined]
     except Exception:
         return False
 
@@ -85,17 +87,17 @@ class StreamTee:
     """Stands in for ``sys.stdout``/``sys.stderr``: writes pass through and are recorded, unless they
     reach the file descriptor that :class:`FdTee` already records (as with ``-s``)."""
 
-    def __init__(self, stream: object, lines: Lines, fd: int | None) -> None:
+    def __init__(self, stream: TextIO, lines: Lines, fd: int | None) -> None:
         # a fixture that swapped the streams (capsys) may have left one of ours behind
         while isinstance(stream, StreamTee):
             stream = stream.stream
-        self.stream = stream
+        self.stream: TextIO = stream
         self.lines = None if fd is not None and reaches_fd(stream, fd) else lines
 
     def write(self, text: str) -> int:
         if self.lines is not None and isinstance(text, str):
             self.lines.feed(text)
-        return self.stream.write(text)  # type: ignore[attr-defined]
+        return self.stream.write(text)
 
     def writelines(self, lines: list[str]) -> None:
         for line in lines:
@@ -205,15 +207,15 @@ class Output:
             StreamTee(sys.stdout, self.sys_lines[0], 1 if 1 in captured else None),
             StreamTee(sys.stderr, self.sys_lines[1], 2 if 2 in captured else None),
         )
-        sys.stdout, sys.stderr = self.tees  # type: ignore[assignment]
+        sys.stdout, sys.stderr = (cast(TextIO, tee) for tee in self.tees)
         return self
 
     def __exit__(self, *_: object) -> None:
         out, err = self.tees
         if sys.stdout is out:  # unless the test swapped them itself (e.g. capsys)
-            sys.stdout = out.stream  # type: ignore[assignment]
+            sys.stdout = out.stream
         if sys.stderr is err:
-            sys.stderr = err.stream  # type: ignore[assignment]
+            sys.stderr = err.stream
         for lines in self.sys_lines:
             lines.flush()
         for fd in self.active:
@@ -231,7 +233,7 @@ def format_record(record: logging.LogRecord) -> str:
     except Exception as error:  # a broken format string: keep what's there
         message = f"{record.msg!r} % {record.args!r} ({error})"
     if record.exc_info:
-        message += "\n" + logging.Formatter().formatException(record.exc_info)  # type: ignore[arg-type]
+        message += "\n" + logging.Formatter().formatException(record.exc_info)
     elif record.exc_text:
         message += "\n" + record.exc_text
     if record.stack_info:

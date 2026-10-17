@@ -75,10 +75,8 @@ def pytest_configure(config: pytest.Config) -> None:
     directory = config.getoption("greendots")
     if not directory:
         return
-    shard, shards = (
-        config.getoption("greendots_worker_id"),
-        config.getoption("greendots_worker_count"),
-    )
+    shard: int = config.option.greendots_worker_id
+    shards: int = config.option.greendots_worker_count
     xdist_worker = os.environ.get("PYTEST_XDIST_WORKER")
     if xdist_worker is None and getattr(config.option, "dist", "no") != "no":
         config.pluginmanager.register(CrashRecorder(Path(directory), shard), PLUGIN_NAME)
@@ -175,7 +173,7 @@ class Writer:
         callspec = getattr(item, "callspec", None)
         cls, module = getattr(item, "cls", None), getattr(item, "module", None)
         name = getattr(item, "originalname", item.name)
-        test = {
+        test: dict[str, Any] = {
             "id": item.nodeid,
             "name": f"{cls.__name__}.{name}" if cls else name,
             "module": module.__name__ if module else item.nodeid.split("::")[0],
@@ -299,8 +297,8 @@ class CrashRecorder:
         self.dir, self.shard = directory, shard
 
     def pytest_runtest_logreport(self, report: pytest.TestReport) -> None:
-        node = getattr(report, "node", None)
-        if report.when != "???" or node is None:  # xdist's report for a crashed worker's test
+        node, when = getattr(report, "node", None), str(report.when)
+        if when != "???" or node is None:  # xdist's report for a crashed worker's test
             return
         info = node.workerinput
         worker = self.shard * int(info["workercount"]) + int(info["workerid"][2:])
@@ -331,7 +329,8 @@ class Progress:
         span: float = 1.0,
     ) -> None:
         self._writer, self._test, self._parent = writer, test, parent
-        self._base, self._span, self._last = base, span, None
+        self._base, self._span = base, span
+        self._last: float | None = None
 
     def __call__(self, fraction: float) -> None:
         fraction = min(max(float(fraction), 0.0), 1.0)
@@ -379,7 +378,7 @@ class TestInfo:
         self._writer, self._test = writer, test
 
     def update(
-        self, *, name: str | None = None, module: str | None = None, params: dict | None = None
+        self, *, name: str | None = None, module: str | None = None, params: dict[str, Any] | None = None
     ) -> None:
         """Renames the test, moves it to another column group, or merges ``params`` into its params."""
         fields: dict[str, Any] = {"name": name, "module": module}

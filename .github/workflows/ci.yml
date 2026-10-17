@@ -12,6 +12,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with: { python-version: "${{ matrix.python }}" }
       - run: uv run ruff check && uv run ruff format --check
+      - run: uv run mypy && uv run pyright
       - run: uv run pytest
 
   web:

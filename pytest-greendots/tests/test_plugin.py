@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -31,28 +32,30 @@ class TestGroup:
 """
 
 
-def jsonl(path: Path) -> list:
+def jsonl(path: Path) -> list[Any]:
     return [json.loads(line) for line in path.read_text().splitlines()]
 
 
-def run(pytester: pytest.Pytester, *args: str, subprocess: bool = False, out: str = "out"):
+def run(
+    pytester: pytest.Pytester, *args: str, subprocess: bool = False, out: str = "out"
+) -> tuple[Path, Any, pytest.RunResult]:
     directory = pytester.path / out
     runner = pytester.runpytest_subprocess if subprocess else pytester.runpytest
     result = runner("--greendots", str(directory), *args)
     plan_path = directory / "plan.json"
-    plan = json.loads(plan_path.read_text()) if plan_path.exists() else None
+    plan: Any = json.loads(plan_path.read_text()) if plan_path.exists() else None
     return directory, plan, result
 
 
-def planned(plan: dict) -> dict:
+def planned(plan: dict[str, Any]) -> dict[str, Any]:
     return {t["id"]: {**t, "module": m} for m, tests in plan["groups"].items() for t in tests}
 
 
-def messages(directory: Path, nodeid: str) -> list:
+def messages(directory: Path, nodeid: str) -> list[tuple[str, str, str]]:
     return [(e["name"], e["level"], e["message"]) for e in jsonl(directory / log_name(nodeid))]
 
 
-def test_plan_has_the_original_layout(pytester):
+def test_plan_has_the_original_layout(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a=TESTS)
     directory, plan, _ = run(pytester)
     tests = planned(plan)
@@ -70,14 +73,14 @@ def test_plan_has_the_original_layout(pytester):
     assert all((directory / t["log_file"]).exists() for t in tests.values())
 
 
-def test_log_names_match_the_original_plugin():
+def test_log_names_match_the_original_plugin() -> None:
     assert log_name("t.py::test") == "t.py::test.log.jsonl"
     assert log_name("dir/t.py::test").startswith("dir_t.py::test-")
     long = log_name("t.py::test[" + "x" * 200 + "]")
     assert len(long) < 130 and long.endswith("x].log.jsonl")
 
 
-def test_statuses(pytester):
+def test_statuses(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a=TESTS)
     directory, _, result = run(pytester)
     result.assert_outcomes(passed=5, failed=1, skipped=1)
@@ -93,7 +96,7 @@ def test_statuses(pytester):
     assert next(e for e in events if e.get("outcome") == "skipped")["reason"] == "Skipped: not today"
 
 
-def test_logs(pytester):
+def test_logs(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a=TESTS)
     directory, _, _ = run(pytester)
     logged = messages(directory, "test_a.py::test_fail[x86]")
@@ -123,7 +126,7 @@ def test_everything():
 """
 
 
-def test_no_output_is_missing(pytester):
+def test_no_output_is_missing(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a=EVERYTHING)
     for args in [(), ("-s",), ("--capture=sys",), ("--capture=tee-sys",)]:
         directory, _, result = run(pytester, *args, out=f"out{''.join(args)}")
@@ -142,7 +145,7 @@ def test_no_output_is_missing(pytester):
         assert len(rest) == len(set(rest)), f"duplicated output with {args}"
 
 
-def test_capture_fixtures_keep_working(pytester):
+def test_capture_fixtures_keep_working(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(
         test_a="""
         import os, sys
@@ -168,7 +171,7 @@ def test_capture_fixtures_keep_working(pytester):
         assert messages(directory, "test_a.py::test_next") == [("stdout", "INFO", "still fine")]
 
 
-def test_output_outside_tests_goes_to_the_session_log(pytester):
+def test_output_outside_tests_goes_to_the_session_log(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a="print('importing')\ndef test_a():\n    pass")
     pytester.makepyfile(test_b="raise RuntimeError('broken module')")
     directory, plan, _ = run(pytester, "--continue-on-collection-errors")
@@ -178,7 +181,7 @@ def test_output_outside_tests_goes_to_the_session_log(pytester):
     assert plan["errors"][0]["id"] == "test_b.py" and "broken module" in plan["errors"][0]["exception"]
 
 
-def test_interrupted_test_is_finished(pytester):
+def test_interrupted_test_is_finished(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a="def test_a():\n    print('working')\n    raise KeyboardInterrupt")
     directory, _, _ = run(pytester, subprocess=True)
     events = jsonl(directory / "status.0.jsonl")
@@ -187,20 +190,20 @@ def test_interrupted_test_is_finished(pytester):
     assert messages(directory, "test_a.py::test_a")[-1][2].startswith("Interrupted")
 
 
-def test_default_row_params_ignore_unparametrized_tests(pytester):
+def test_default_row_params_ignore_unparametrized_tests(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a=TESTS + "\ndef test_plain():\n    pass\n")
     _, plan, _ = run(pytester)
     assert plan["row_params"] == ["arch"]
 
 
-def test_row_params_ini(pytester):
+def test_row_params_ini(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a=TESTS)
     pytester.makeini("[pytest]\ngreendots_row_params = variant arch")
     _, plan, _ = run(pytester)
     assert plan["row_params"] == ["variant", "arch"]
 
 
-def test_row_params_fixture_updates_the_plan(pytester):
+def test_row_params_fixture_updates_the_plan(pytester: pytest.Pytester) -> None:
     pytester.makeconftest(
         """
         import pytest
@@ -216,7 +219,7 @@ def test_row_params_fixture_updates_the_plan(pytester):
     assert updates == [{"type": "plan_update", "row_params": ["variant"], "time": updates[0]["time"]}]
 
 
-def test_greendots_fixture_updates_a_test(pytester):
+def test_greendots_fixture_updates_a_test(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(
         test_a="""
         def test_a(greendots):
@@ -238,7 +241,7 @@ def test_greendots_fixture_updates_a_test(pytester):
     ]
 
 
-def test_marker_overrides(pytester):
+def test_marker_overrides(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(
         test_a="""
         import pytest
@@ -255,7 +258,7 @@ def test_marker_overrides(pytester):
     assert test["params"] == {"arch": "arm", "board": "rpi"}
 
 
-def test_hook_overrides(pytester):
+def test_hook_overrides(pytester: pytest.Pytester) -> None:
     pytester.makeconftest(
         """
         def pytest_greendots_test(item, test):
@@ -272,7 +275,7 @@ def test_hook_overrides(pytester):
     assert all("variant" not in t["params"] for t in planned(plan).values())
 
 
-def test_param_formatting(pytester):
+def test_param_formatting(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(
         test_a="""
         import enum, pytest
@@ -293,7 +296,7 @@ def test_param_formatting(pytester):
     assert [t["params"]["value"] for t in plan["groups"]["test_a"]] == ["Color.RED", "None", "rpi"]
 
 
-def test_progress(pytester):
+def test_progress(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(
         test_a="""
         def test_track(greendots_progress):
@@ -314,7 +317,7 @@ def test_progress(pytester):
     )
     directory, _, result = run(pytester)
     result.assert_outcomes(passed=4)
-    progress: dict[str, list] = {}
+    progress: dict[str, list[float]] = {}
     for event in jsonl(directory / "status.0.jsonl"):
         if event["type"] == "progress":
             progress.setdefault(event["test"].split("::")[1], []).append(event["percentage"])
@@ -325,7 +328,7 @@ def test_progress(pytester):
     assert progress["test_sleep"][-1] == 1.0
 
 
-def test_disabled_without_option(pytester):
+def test_disabled_without_option(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(
         test_a="""
         def test_progress(greendots_progress, greendots):
@@ -337,7 +340,7 @@ def test_disabled_without_option(pytester):
     assert not list(pytester.path.glob("**/*.jsonl"))
 
 
-def test_xdist(pytester):
+def test_xdist(pytester: pytest.Pytester) -> None:
     pytest.importorskip("xdist")
     pytester.makepyfile(test_a=TESTS)
     directory, plan, result = run(pytester, "-n", "2", subprocess=True)
@@ -351,7 +354,7 @@ def test_xdist(pytester):
     assert sorted(finished) == sorted(planned(plan))
 
 
-def test_xdist_crash_is_recorded(pytester):
+def test_xdist_crash_is_recorded(pytester: pytest.Pytester) -> None:
     pytest.importorskip("xdist")
     pytester.makepyfile(test_a="import os\ndef test_crash():\n    print('bye')\n    os._exit(3)")
     directory, _, _ = run(pytester, "-n", "1", subprocess=True)
@@ -364,7 +367,7 @@ def test_xdist_crash_is_recorded(pytester):
     assert ("stdout", "INFO", "bye") in logged and "crashed" in logged[-1][2]
 
 
-def test_original_options(pytester):
+def test_original_options(pytester: pytest.Pytester) -> None:
     pytester.makepyfile(test_a=TESTS)
     directory = pytester.path / "out"
     args = ["--livelog", str(directory), "--livelog-worker-id", "1", "--livelog-worker-count", "3"]

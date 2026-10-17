@@ -218,7 +218,8 @@ The API is described at `/api`.
 ## Development
 
 ```bash
-cd pytest-greendots && uv run pytest && uv run ruff check   # plugin tests (pytester, incl. xdist and capture modes)
+cd pytest-greendots && uv run pytest                        # plugin tests (pytester, incl. xdist and capture modes)
+cd pytest-greendots && uv run ruff check && uv run ruff format --check && uv run mypy && uv run pyright
 cd web && bun run test && bun run lint                      # web app tests (vitest) and Biome
 cd web && bun run dev                                       # the UI on http://localhost:3000
 ```
