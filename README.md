@@ -73,7 +73,7 @@ user can write runs to), and `python3-pytest-greendots`, the plugin.
 packaging/fedora/build.sh
 sudo dnf install packaging/fedora/rpms/*.$(arch).rpm packaging/fedora/rpms/*.noarch.rpm
 sudo systemctl enable --now greendots
-sudo firewall-cmd --permanent --add-service=greendots && sudo firewall-cmd --reload   # if needed
+sudo firewall-cmd --reload && sudo firewall-cmd --permanent --add-service=greendots && sudo firewall-cmd --reload   # if needed
 ```
 
 Open <http://localhost:7357> (or this machine's address from another one). Its config is
