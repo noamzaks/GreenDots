@@ -1,0 +1,55 @@
+{
+  "name": "greendots",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "GREENDOTS_CONFIG=../example-data/greendots.json UV_THREADPOOL_SIZE=64 next dev -H 127.0.0.1",
+    "build": "next build",
+    "start": "node bin/greendots.mjs",
+    "lint": "biome check",
+    "format": "biome format --write",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mantine/core": "^9.7.2",
+    "@mantine/hooks": "^9.7.2",
+    "@tabler/icons-react": "^3.49.0",
+    "canvas-confetti": "^1.9.4",
+    "dayjs": "^1.11.23",
+    "liqe": "^3.8.7",
+    "next": "16.4.2",
+    "p-limit": "^7.3.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-virtuoso": "^4.18.19",
+    "smol-toml": "^1.9.1",
+    "swr": "^2.5.1",
+    "wouter": "^3.13.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.2",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "postcss": "^8.5.30",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
+    "typescript": "^5",
+    "vitest": "^5.0.5"
+  },
+  "packageManager": "bun@1.4.2",
+  "ignoreScripts": [
+    "sharp",
+    "unrs-resolver"
+  ],
+  "trustedDependencies": [
+    "sharp",
+    "unrs-resolver"
+  ],
+  "bin": {
+    "greendots": "bin/greendots.mjs"
+  }
+}
