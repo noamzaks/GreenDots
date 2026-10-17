@@ -20,8 +20,10 @@ BuildRequires:  nodejs >= 22
 BuildRequires:  python3-devel
 BuildRequires:  pyproject-rpm-macros
 BuildRequires:  systemd-rpm-macros
+BuildRequires:  firewalld-filesystem
 Requires:       nodejs >= 22
 %{?systemd_requires}
+Requires(post): firewalld-filesystem
 
 %description
 GreenDots shows pytest runs as a live test matrix: every test is a dot, rows and columns are test parameters, and
@@ -72,6 +74,7 @@ cd pytest-greendots
 %post
 %tmpfiles_create %{_tmpfilesdir}/greendots.conf
 %systemd_post greendots.service
+%firewalld_reload
 
 %preun
 %systemd_preun greendots.service
