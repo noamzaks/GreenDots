@@ -49,6 +49,7 @@ export class Store {
     this.config = config
     this.fs.concurrency = config.filesystem.concurrency
     this.fs.timeout = config.filesystem.timeout * 1000
+    this.fs.chunk = config.filesystem.chunk * 1024
     this.logs.window = config.logs.window * 1024
     this.logs.preview = config.logs.preview * 1024
     this.activity.capacity = config.activity

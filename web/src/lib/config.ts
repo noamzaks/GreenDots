@@ -34,6 +34,8 @@ export const Config = z.object({
       concurrency: z.number().int().min(1).default(8),
       /** Operations taking longer fail (the share may be unreachable). */
       timeout: seconds(30),
+      /** Files are read in pieces of at most this many KB, so a big one can't time out on a slow share. */
+      chunk: z.number().int().min(64).default(1024),
     })
     .prefault({}),
   logs: z

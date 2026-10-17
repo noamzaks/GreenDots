@@ -96,6 +96,16 @@ describe("Run", () => {
     expect(run.done).toBe(true) // every test finished, even without session_finish (the original plugin)
   })
 
+  test("reads big files in pieces", async () => {
+    const dir = makeRun("local", "p", "r")
+    finishAll(dir)
+    const fs = nodeFs({ chunk: 16 })
+    const run = new Run(fs, dir)
+    await run.sync()
+    expect(run.summary()).toMatchObject({ passed: 2, done: true })
+    expect(fs.ops).toBeGreaterThan(20)
+  })
+
   test("stops reading workers that finished", async () => {
     const fs = nodeFs()
     const dir = makeRun("local", "p", "r")

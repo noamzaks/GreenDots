@@ -124,9 +124,15 @@ export class Run {
     const stat = await this.fs.stat(file)
     this.modified = Math.max(this.modified, stat?.mtime ?? 0)
     const size = stat?.size ?? 0
-    if (size <= worker.offset) return
-    const bytes = await this.fs.read(file, worker.offset, size - worker.offset)
-    worker.offset += bytes.length
+    while (worker.offset < size) {
+      const bytes = await this.fs.read(file, worker.offset, Math.min(this.fs.chunk, size - worker.offset))
+      if (!bytes.length) return
+      worker.offset += bytes.length
+      this.parse(worker, bytes)
+    }
+  }
+
+  private parse(worker: (typeof this.workers)[number], bytes: Buffer) {
     const chunk = Buffer.concat([worker.rest, bytes])
     const end = chunk.lastIndexOf(10) + 1
     worker.rest = chunk.subarray(end)

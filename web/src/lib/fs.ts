@@ -1,4 +1,4 @@
-import { open, readdir, readFile, stat } from "node:fs/promises"
+import { open, readdir, stat } from "node:fs/promises"
 import pLimit from "p-limit"
 import type { ActivityKind, ActivityLog } from "./activity"
 
@@ -8,16 +8,18 @@ export type Fs = {
   stat(path: string): Promise<{ size: number; mtime: number } | undefined>
   read(path: string, offset: number, length: number): Promise<Buffer>
   readText(path: string): Promise<string | undefined>
+  /** The most bytes one `read` should ask for; bigger reads are split, each with its own timeout. */
+  chunk: number
 }
 
-export type FsOptions = { concurrency?: number; timeout?: number; activity?: ActivityLog }
+export type FsOptions = { concurrency?: number; timeout?: number; chunk?: number; activity?: ActivityLog }
 
 /**
  * Node's fs, with at most `concurrency` operations at a time so a slow share isn't flooded, giving up on
  * operations after `timeout` ms (an unreachable share hangs them), and recording every one in `activity`.
  * A hung operation keeps its slot until it really ends, so they can't pile up.
  */
-export function nodeFs({ concurrency = 8, timeout = 30_000, activity }: FsOptions = {}) {
+export function nodeFs({ concurrency = 8, timeout = 30_000, chunk = 1 << 20, activity }: FsOptions = {}) {
   const limit = pLimit(concurrency)
   const fs = {
     ops: 0,
@@ -25,6 +27,7 @@ export function nodeFs({ concurrency = 8, timeout = 30_000, activity }: FsOption
       limit.concurrency = value
     },
     timeout,
+    chunk,
     list: (dir: string) =>
       run("list", dir, async () => {
         const entries = await readdir(dir, { withFileTypes: true })
@@ -37,7 +40,19 @@ export function nodeFs({ concurrency = 8, timeout = 30_000, activity }: FsOption
         (s) => ({ size: s.size, mtime: s.mtimeMs }),
         () => undefined,
       ),
-    readText: (path: string) => run("read", path, () => readFile(path, "utf8")).catch(() => undefined),
+    readText: async (path: string) => {
+      const parts: Buffer[] = []
+      try {
+        for (let offset = 0; ; ) {
+          const part = await fs.read(path, offset, fs.chunk)
+          parts.push(part)
+          offset += part.length
+          if (part.length < fs.chunk) return Buffer.concat(parts).toString("utf8")
+        }
+      } catch {
+        return undefined
+      }
+    },
     read: (path: string, offset: number, length: number) =>
       run("read", path, async () => {
         const file = await open(path)

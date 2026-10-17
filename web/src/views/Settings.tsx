@@ -48,6 +48,7 @@ const FIELDS: Field[] = [
   { section: "polling", key: "recentRuns", label: "Latest runs kept up to date per synced project", unit: "" },
   { section: "filesystem", key: "concurrency", label: "Operations on the sources at a time", unit: "" },
   { section: "filesystem", key: "timeout", label: "Give up on an operation after", unit: "s" },
+  { section: "filesystem", key: "chunk", label: "Read files in pieces of", unit: "KB" },
   { section: "logs", key: "window", label: "Read logs in pieces of", unit: "KB" },
   { section: "logs", key: "preview", label: "Show long lines up to", unit: "KB", help: "The rest opens in a viewer" },
   { section: "server", key: "port", label: "Port", unit: "", help: "Takes effect when the server restarts" },
