@@ -320,30 +320,40 @@ export function Matrix(props: Props) {
       <Box style={{ ...sticky, top: 0, zIndex: 2 }}>{columnLabels}</Box>
       <Box style={{ ...sticky, top: headerHeight, left: 0, zIndex: 3 }} />
       <Box style={{ ...sticky, top: headerHeight, zIndex: 2, display: "flex" }}>
-        {grid.groups.map((group) => (
-          <Box
-            key={`${group.module}-${group.start}`}
-            title={group.module}
-            style={{
-              width: (group.end - group.start) * cell,
-              borderTop: "2px solid var(--mantine-color-default-border)",
-            }}
-          >
-            {group.end - group.start > 2 && (
-              // stays visible while scrolling through a wide group
-              <Text
-                size="xs"
-                fw={600}
-                c="dimmed"
-                truncate
-                px={4}
-                style={{ position: "sticky", left: cornerWidth + 12, width: "fit-content", maxWidth: "100%" }}
+        {grid.groups.map((group, index) => {
+          // the last group may grow past its columns to show its name, e.g. a matrix of one test
+          const last = index === grid.groups.length - 1
+          const named = last || group.end - group.start > 2
+          return (
+            <Box
+              key={`${group.module}-${group.start}`}
+              title={group.module}
+              py={4}
+              px={2}
+              style={{ width: (group.end - group.start) * cell, flexShrink: 0 }}
+            >
+              <Box
+                h="100%"
+                bg="var(--mantine-color-gray-light)"
+                style={{ borderRadius: "var(--mantine-radius-sm)", minWidth: last ? "max-content" : undefined }}
               >
-                {group.module}
-              </Text>
-            )}
-          </Box>
-        ))}
+                {named && (
+                  // stays visible while scrolling through a wide group
+                  <Text
+                    size="xs"
+                    c="dimmed"
+                    truncate
+                    px={6}
+                    lh="20px"
+                    style={{ position: "sticky", left: cornerWidth + 12, width: "fit-content", maxWidth: "100%" }}
+                  >
+                    {group.module}
+                  </Text>
+                )}
+              </Box>
+            </Box>
+          )
+        })}
       </Box>
       <Box style={{ ...sticky, left: 0, zIndex: 1 }}>{showRows && rowLabels}</Box>
       <Box
