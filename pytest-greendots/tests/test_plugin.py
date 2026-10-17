@@ -340,12 +340,30 @@ def test_disabled_without_option(pytester: pytest.Pytester) -> None:
     assert not list(pytester.path.glob("**/*.jsonl"))
 
 
+@pytest.mark.parametrize("addopts", ["", "--dist loadgroup"])
+def test_without_xdist_workers(pytester: pytest.Pytester, addopts: str) -> None:
+    pytest.importorskip("xdist")
+    pytester.makeini(f"[pytest]\naddopts = {addopts}")  # --dist without -n or --tx starts no workers
+    pytester.makepyfile(test_a=TESTS)
+    directory, plan, result = run(pytester, subprocess=True)
+    result.assert_outcomes(passed=5, failed=1, skipped=1)
+    assert plan["worker_count"] == 1
+    assert [path.name for path in directory.glob("status.*.jsonl")] == ["status.0.jsonl"]
+    events = jsonl(directory / "status.0.jsonl")
+    assert events[-1]["type"] == "session_finish"
+    assert sorted(e["test"] for e in events if e["type"] == "finish") == sorted(planned(plan))
+
+
 def test_xdist(pytester: pytest.Pytester) -> None:
     pytest.importorskip("xdist")
     pytester.makepyfile(test_a=TESTS)
     directory, plan, result = run(pytester, "-n", "2", subprocess=True)
     result.assert_outcomes(passed=5, failed=1, skipped=1)
     assert plan["worker_count"] == 2
+    assert sorted(path.name for path in directory.glob("status.*.jsonl")) == [
+        "status.0.jsonl",
+        "status.1.jsonl",
+    ]
     finished = []
     for worker in range(2):
         events = jsonl(directory / f"status.{worker}.jsonl")
@@ -354,11 +372,13 @@ def test_xdist(pytester: pytest.Pytester) -> None:
     assert sorted(finished) == sorted(planned(plan))
 
 
-def test_xdist_crash_is_recorded(pytester: pytest.Pytester) -> None:
+@pytest.mark.parametrize("workers", ["1", "2"])
+def test_xdist_crash_is_recorded(pytester: pytest.Pytester, workers: str) -> None:
     pytest.importorskip("xdist")
     pytester.makepyfile(test_a="import os\ndef test_crash():\n    print('bye')\n    os._exit(3)")
-    directory, _, _ = run(pytester, "-n", "1", subprocess=True)
-    events = jsonl(directory / "status.0.jsonl")
+    directory, _, _ = run(pytester, "-n", workers, subprocess=True)
+    # the controller records the crash in the status file of the worker that ran the test
+    events = [e for path in directory.glob("status.*.jsonl") for e in jsonl(path) if e.get("test")]
     assert [(e["type"], e.get("outcome")) for e in events if e["type"] != "setup"][-2:] == [
         ("call", "failed"),
         ("finish", "failed"),

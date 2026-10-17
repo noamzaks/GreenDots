@@ -79,7 +79,9 @@ def pytest_configure(config: pytest.Config) -> None:
     shard: int = config.option.greendots_worker_id
     shards: int = config.option.greendots_worker_count
     xdist_worker = os.environ.get("PYTEST_XDIST_WORKER")
-    if xdist_worker is None and getattr(config.option, "dist", "no") != "no":
+    # the xdist controller, when xdist really starts workers: --dist alone (e.g. in addopts) doesn't
+    distributed = getattr(config.option, "dist", "no") != "no" and getattr(config.option, "tx", None)
+    if xdist_worker is None and distributed and not config.option.collectonly:
         config.pluginmanager.register(CrashRecorder(Path(directory), shard), PLUGIN_NAME)
         return
     per_shard = int(os.environ.get("PYTEST_XDIST_WORKER_COUNT", "1"))
