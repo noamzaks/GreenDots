@@ -5,7 +5,7 @@ import { useDocumentTitle } from "@mantine/hooks"
 import { IconSearch } from "@tabler/icons-react"
 import { useState } from "react"
 import { Link } from "wouter"
-import { ProjectActions } from "@/components/ProjectActions"
+import { ProjectActions, usePins } from "@/components/ProjectActions"
 import { RunBar } from "@/components/RunBar"
 import { pages, useStream } from "@/lib/client"
 import { ago } from "@/lib/time"
@@ -18,7 +18,7 @@ function ProjectCard({ project, sources }: { project: ProjectInfo; sources: bool
         <Anchor component={Link} href={pages.project(project.name)} fw={700} size="lg" truncate>
           {project.title ?? project.name}
         </Anchor>
-        <ProjectActions project={project.name} synced={project.synced} pinned={project.pinned} />
+        <ProjectActions project={project.name} synced={project.synced} />
       </Group>
       <Stack gap={6}>
         {project.runs.map((run) => (
@@ -69,14 +69,18 @@ function ProjectCard({ project, sources }: { project: ProjectInfo; sources: bool
 export default function Home() {
   const { data, error } = useStream<Projects>("/api/projects")
   const [search, setSearch] = useState("")
+  const [pins] = usePins()
   useDocumentTitle("GreenDots")
   const projects = (data?.projects ?? [])
     .filter((project) => `${project.name} ${project.title ?? ""}`.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => Number(b.synced) - Number(a.synced) || a.name.localeCompare(b.name))
-  const pinned = projects.filter((project) => project.pinned)
+  const pinned = projects.filter((project) => pins.includes(project.name))
   const sections = [
     { title: "Pinned", projects: pinned },
-    { title: pinned.length ? "All projects" : "Projects", projects: projects.filter((project) => !project.pinned) },
+    {
+      title: pinned.length ? "All projects" : "Projects",
+      projects: projects.filter((project) => !pins.includes(project.name)),
+    },
   ].filter((section) => section.projects.length)
   const sources = new Set(data?.projects.flatMap((project) => project.runs.map((run) => run.source))).size > 1
   return (

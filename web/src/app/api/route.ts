@@ -7,7 +7,7 @@ GET  /api/config                              the settings, and the path of the 
 PUT  /api/config                              replaces the settings
 GET  /api/projects                            stream: every project in every source, with its latest runs
 GET  /api/projects/<project>                  stream: a project's runs, the latest summarized
-PUT  /api/projects/<project>                  {"synced"?: bool, "pinned"?: bool}
+PUT  /api/projects/<project>                  {"synced": bool}
 GET  <run>                                    stream: the plan, a summary, the tests' states; then changes
 POST <run>/check                              checks a run that isn't checked anymore, and resumes checking it
 GET  <run>/failed                             the ids of the failed tests

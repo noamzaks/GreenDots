@@ -10,7 +10,6 @@ export const Config = z.object({
     .default([]),
   /** Projects whose latest runs are kept up to date in the background. */
   synced: z.array(z.string()).default([]),
-  pinned: z.array(z.string()).default([]),
   server: z.object({ host: z.string().default("127.0.0.1"), port: z.number().int().default(3000) }).prefault({}),
   polling: z
     .object({

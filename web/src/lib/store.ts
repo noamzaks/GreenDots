@@ -225,21 +225,17 @@ export class Store {
         name,
         title: this.projectTitle(name),
         synced,
-        pinned: this.config.pinned.includes(name),
         runs: runs.slice(0, shown),
       }
     })
     return { projects, errors, loading }
   }
 
-  setProject(project: string, change: { synced?: boolean; pinned?: boolean }) {
+  setSynced(project: string, synced: boolean) {
     if (!isName(project)) return
-    const toggle = (list: string[], on?: boolean) =>
-      on === undefined ? list : on ? [...new Set([...list, project])] : list.filter((name) => name !== project)
     this.update((config) => ({
       ...config,
-      synced: toggle(config.synced, change.synced),
-      pinned: toggle(config.pinned, change.pinned),
+      synced: synced ? [...new Set([...config.synced, project])] : config.synced.filter((name) => name !== project),
     }))
   }
 

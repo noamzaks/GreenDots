@@ -174,14 +174,15 @@ describe("Store", () => {
     expect(await store.logFile(other, { test: "x" })).toBeUndefined()
   })
 
-  test("saves synced and pinned projects in the config", () => {
+  test("saves synced projects in the config", () => {
     let saved: Config | undefined
     const store = makeStore({}, (config) => {
       saved = config
     })
-    store.setProject("p", { synced: true, pinned: true })
-    store.setProject("p", { pinned: false })
-    expect(saved).toMatchObject({ synced: ["p"], pinned: [] })
+    store.setSynced("p", true)
+    store.setSynced("q", true)
+    store.setSynced("p", false)
+    expect(saved).toMatchObject({ synced: ["q"] })
   })
 
   test("polls a run while it changes, more slowly once it doesn't, and stops after a while", async () => {

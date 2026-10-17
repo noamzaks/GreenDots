@@ -53,13 +53,12 @@ export type RunInfo = {
   summary?: Summary
   polling?: Polling
 }
-export type ProjectInfo = { name: string; title?: string; synced: boolean; pinned: boolean; runs: RunInfo[] }
+export type ProjectInfo = { name: string; title?: string; synced: boolean; runs: RunInfo[] }
 export type Projects = { projects: ProjectInfo[]; errors: { source: string; error: string }[]; loading: boolean }
 export type ProjectRuns = {
   name: string
   title?: string
   synced: boolean
-  pinned: boolean
   runs: RunInfo[]
   loading: boolean
 }

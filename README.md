@@ -49,8 +49,8 @@ bun run start
 Open <http://localhost:3000>, go to **Settings** and add your sources (e.g. `local` → `/var/opt/greendots` and
 `network` → `/media/greendots`). Projects with the same name in several sources are shown together.
 
-On the home page, **pin** (📌) the projects you care about to the top, and **sync** (↻) the ones whose latest runs
-you want kept up to date even while you're not looking.
+On the home page, **pin** (📌) the projects you care about to the top (pins are kept in your browser), and **sync**
+(↻) the ones whose latest runs you want kept up to date even while you're not looking.
 
 ### Try it out with the demo suite
 
@@ -72,7 +72,6 @@ Every key is optional:
 {
   "sources": [{ "name": "local", "path": "/var/opt/greendots" }, { "name": "network", "path": "/media/greendots" }],
   "synced": ["my-project"],
-  "pinned": ["my-project"],
   "server": { "host": "127.0.0.1", "port": 3000 },
   "polling": { "run": 1, "slowRun": 60, "slowAfter": 600, "stopAfter": 3600, "list": 10, "browse": 300, "recentRuns": 5 },
   "filesystem": { "concurrency": 8, "timeout": 30 },

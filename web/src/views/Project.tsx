@@ -26,7 +26,7 @@ export default function ProjectPage() {
     <Stack maw={1400} mx="auto" gap="md">
       <Group gap="sm">
         <Title order={2}>{data.title ?? project}</Title>
-        <ProjectActions project={project} synced={data.synced} pinned={data.pinned} />
+        <ProjectActions project={project} synced={data.synced} />
         {data.loading && <Loader size="xs" />}
       </Group>
       {!data.loading && data.runs.length === 0 && <Text c="dimmed">No runs yet.</Text>}
