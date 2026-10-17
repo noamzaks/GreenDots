@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>GreenDots</short>
+  <description>GreenDots live pytest matrix viewer</description>
+  <port protocol="tcp" port="7357"/>
+</service>

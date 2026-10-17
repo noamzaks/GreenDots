@@ -1,0 +1,2 @@
+# pytest runs of any user write here (--greendots=/var/opt/greendots2/<project>/<run>), the viewer reads it
+d /var/opt/greendots2 1777 root root -

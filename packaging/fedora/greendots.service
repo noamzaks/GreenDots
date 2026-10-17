@@ -1,0 +1,22 @@
+[Unit]
+Description=GreenDots live pytest matrix viewer
+Documentation=https://github.com/noamzaks/GreenDots
+Wants=network-online.target
+After=network-online.target remote-fs.target
+
+[Service]
+User=greendots
+Group=greendots
+Environment=GREENDOTS_CONFIG=/etc/greendots/config.json
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/usr/bin/node /usr/lib/greendots/bin/greendots.mjs
+StateDirectory=greendots
+Restart=on-failure
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=read-only
+ProtectSystem=full
+ReadWritePaths=/etc/greendots
+
+[Install]
+WantedBy=multi-user.target

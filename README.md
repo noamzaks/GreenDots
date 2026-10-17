@@ -63,6 +63,21 @@ Open <http://localhost:3000>, go to **Settings** and add your sources (e.g. `loc
 On the home page, **pin** (📌) the projects you care about to the top (pins are kept in your browser), and **sync**
 (↻) the ones whose latest runs you want kept up to date even while you're not looking.
 
+### Or install the Fedora package
+
+`packaging/fedora/build.sh` builds RPMs in a Fedora container (needs Podman) into `packaging/fedora/rpms/`:
+`greendots`, a `greendots` service on `0.0.0.0:7357` that reads runs from `/var/opt/greendots2` (a directory every
+user can write runs to), and `python3-pytest-greendots`, the plugin.
+
+```bash
+packaging/fedora/build.sh
+sudo dnf install packaging/fedora/rpms/*.$(arch).rpm packaging/fedora/rpms/*.noarch.rpm
+sudo systemctl enable --now greendots
+sudo firewall-cmd --permanent --add-service=greendots && sudo firewall-cmd --reload   # if needed
+```
+
+Its config is `/etc/greendots/config.json`, also edited on the Settings page.
+
 ### Try it out with the demo suite
 
 ```bash
