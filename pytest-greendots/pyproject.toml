@@ -1,0 +1,33 @@
+[project]
+name = "pytest-greendots"
+version = "0.2.0"
+description = "Pytest plugin that records live test status and complete logs for the GreenDots test matrix viewer"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+dependencies = ["pytest>=7"]
+classifiers = ["Framework :: Pytest", "Programming Language :: Python :: 3"]
+
+[project.entry-points.pytest11]
+greendots = "greendots.plugin"
+
+[dependency-groups]
+dev = ["pytest-xdist>=3", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p pytester"
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+# capturing must never break the code under test, so it deliberately swallows any exception
+ignore = ["BLE001", "S110", "PYI034"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/greendots"]
