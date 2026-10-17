@@ -2,7 +2,7 @@
 
 import { Badge, Box, Code, Group, Paper, Stack, Text, useComputedColorScheme, useMantineTheme } from "@mantine/core"
 import { useDebouncedValue, useLocalStorage } from "@mantine/hooks"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { type RefObject, useEffect, useId, useMemo, useRef, useState } from "react"
 import useSWR from "swr"
 import { apis, COLORS, type RunRef } from "@/lib/client"
 import type { Grid } from "@/lib/grid"
@@ -19,25 +19,30 @@ type Hover = { row: number; column: number; test?: PlanTest; x: number; y: numbe
 type Props = {
   run: RunRef
   grid: Grid
+  scroller: RefObject<HTMLDivElement | null> // scrolls this matrix (and the others of the run)
   tests: Map<string, TestState>
   errors: Map<string, string> // test id -> error id
   errorColors: Map<string, string> // error id -> CSS color
-  rowParams: string[]
   cell: number // the size of a dot's cell, in pixels
   highlight?: string
   colorErrors?: boolean
   onOpen: (test: PlanTest, modifiers: Modifiers) => void
 }
 
+/** The sizes of the column headers and row labels, as the user dragged them. */
+export const useMatrixLayout = (project: string) =>
+  useLocalStorage<{ header?: number; labels?: number }>({ key: `greendots-layout-${project}`, defaultValue: {} })
+
 /**
- * The matrix of dots. Only the visible part is drawn, so huge matrices stay cheap (and within canvas limits).
+ * A matrix of dots. Only the visible part is drawn, so huge matrices stay cheap (and within canvas limits).
  * Hover or focus it and use the arrow keys to look at a test; click or press Enter to open its log.
  */
 export function Matrix(props: Props) {
-  const { run, grid, tests, errors, errorColors, rowParams, cell, highlight, colorErrors, onOpen } = props
+  const { run, grid, scroller, tests, errors, errorColors, cell, highlight, colorErrors, onOpen } = props
+  const { rowParams } = grid
   const theme = useMantineTheme()
   const dark = useComputedColorScheme("light") === "dark"
-  const scroller = useRef<HTMLDivElement>(null)
+  const id = useId()
   const area = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const corner = useRef<HTMLDivElement>(null)
@@ -57,10 +62,7 @@ export function Matrix(props: Props) {
   const showLabels = cell >= 14 && labels.some(Boolean)
   const showRows = rowParams.length > 0 || grid.rows.length > 1
 
-  const [layout, setLayout] = useLocalStorage<{ header?: number; labels?: number }>({
-    key: `greendots-layout-${run.project}`,
-    defaultValue: {},
-  })
+  const [layout, setLayout] = useMatrixLayout(run.project)
   const longest = Math.max(0, ...labels.map((label) => label.length))
   const headerHeight = showLabels ? (layout.header ?? Math.min(320, Math.max(60, longest * 5.4 + 24))) : 24
 
@@ -85,7 +87,7 @@ export function Matrix(props: Props) {
       observer.disconnect()
       outer.removeEventListener("scroll", update)
     }
-  }, [width, height])
+  }, [scroller, width, height])
 
   useEffect(() => {
     const context = canvas.current?.getContext("2d")
@@ -242,24 +244,27 @@ export function Matrix(props: Props) {
     const row = Math.min(grid.rows.length - 1, Math.max(0, (current?.row ?? 0) + (current ? move[0] : 0)))
     const column = Math.min(grid.columns.length - 1, Math.max(0, (current?.column ?? 0) + (current ? move[1] : 0)))
     cursor.current = { row, column }
-    const outer = scroller.current
-    if (outer && area.current) {
+    const [outer, cells] = [scroller.current, area.current?.getBoundingClientRect()]
+    if (outer && cells) {
       // keep the cell in view, clear of the sticky headers
-      const [left, top] = [area.current.offsetLeft + column * cell, area.current.offsetTop + row * cell]
-      if (left - cornerWidth < outer.scrollLeft) outer.scrollLeft = left - cornerWidth - cell
-      if (left + cell > outer.scrollLeft + outer.clientWidth) outer.scrollLeft = left + 2 * cell - outer.clientWidth
-      if (top - headerHeight - 28 < outer.scrollTop) outer.scrollTop = top - headerHeight - 28 - cell
-      if (top + cell > outer.scrollTop + outer.clientHeight) outer.scrollTop = top + 2 * cell - outer.clientHeight
+      const box = outer.getBoundingClientRect()
+      const [left, top] = [cells.left + column * cell - box.left, cells.top + row * cell - box.top]
+      if (left < cornerWidth) outer.scrollLeft += left - cornerWidth - cell
+      if (left + cell > outer.clientWidth) outer.scrollLeft += left + 2 * cell - outer.clientWidth
+      if (top < headerHeight + 28) outer.scrollTop += top - headerHeight - 28 - cell
+      if (top + cell > outer.clientHeight) outer.scrollTop += top + 2 * cell - outer.clientHeight
     }
     requestAnimationFrame(() => setHover(at(row, column)))
   }
   const sticky = { position: "sticky", background: "var(--mantine-color-body)" } as const
-  const dim = hover && `[data-column]:not([data-column="${hover.column}"]), [data-row]:not([data-row="${hover.row}"])`
+  const scope = `[data-matrix="${id}"]`
+  const dim =
+    hover &&
+    `${scope} [data-column]:not([data-column="${hover.column}"]), ${scope} [data-row]:not([data-row="${hover.row}"])`
 
   return (
     <Box
-      ref={scroller}
-      id="matrix"
+      data-matrix={id}
       className="matrix"
       tabIndex={0}
       role="application"
@@ -271,15 +276,10 @@ export function Matrix(props: Props) {
       }}
       style={{
         display: "grid",
-        gridTemplateColumns: `${!showRows ? "0px" : layout.labels ? `${layout.labels}px` : "fit-content(320px)"} ${width}px`,
+        gridColumn: "1 / -1",
+        gridTemplateColumns: "subgrid", // the row labels line up with the other matrices'
         gridTemplateRows: `${headerHeight}px ${grid.groups.length > 1 || showLabels ? 28 : 0}px ${height}px`,
-        overflow: "auto",
-        flex: 1,
-        minHeight: 0,
-        alignContent: "start",
         paddingRight: showLabels ? Math.min(240, headerHeight * 0.6) : 16,
-        columnGap: showRows ? 12 : 0,
-        paddingLeft: showRows ? 0 : 12, // room for the first rotated column label
       }}
     >
       {dim && <style>{`${dim} { opacity: 0.4 }`}</style>}
@@ -349,6 +349,7 @@ export function Matrix(props: Props) {
       <Box
         ref={area}
         pos="relative"
+        w={width}
         style={{ cursor: hover?.test ? "pointer" : undefined }}
         onMouseMove={(event) => {
           const hovered = point(event)

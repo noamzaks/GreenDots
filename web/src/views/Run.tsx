@@ -3,6 +3,7 @@
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   CloseButton,
   CopyButton,
@@ -42,13 +43,13 @@ import { type LiqeQuery, test as matches, parse } from "liqe"
 import { useMemo, useRef, useState } from "react"
 import { Link, useLocation } from "wouter"
 import { ErrorsDrawer } from "@/components/ErrorsDrawer"
-import { ERROR_PALETTE, Matrix } from "@/components/Matrix"
+import { ERROR_PALETTE, Matrix, useMatrixLayout } from "@/components/Matrix"
 import { FilterHelp, Shortcuts } from "@/components/RunHelp"
 import { Traceback } from "@/components/Traceback"
 import { useNotificationsSetting, useRunAlerts } from "@/lib/alerts"
 import { apis, COLORS, errorTitle, hash, pages, type RunRef, useRun } from "@/lib/client"
 import { plural } from "@/lib/format"
-import { buildGrid } from "@/lib/grid"
+import { buildGrids } from "@/lib/grid"
 import { mod } from "@/lib/platform"
 import { useQueryParam, useRunRef } from "@/lib/router"
 import { ago, took } from "@/lib/time"
@@ -90,11 +91,13 @@ function RunView(ref: RunRef) {
   // how many dots fit across (next to the row labels), for wrapping suites without row params
   const columns = Math.floor((useViewportSize().width - (showErrors && !mobile ? 440 : 0) - 240) / cell)
   const filterInput = useRef<HTMLInputElement>(null)
+  const scroller = useRef<HTMLDivElement>(null)
+  const [layout] = useMatrixLayout(project)
   useHotkeys([
     ["mod+K", () => filterInput.current?.select()],
     ["mod+E", () => setShowErrors(!showErrors)],
     ["shift+?", () => setHelp(true)],
-    ["g", () => document.getElementById("matrix")?.focus()],
+    ["g", () => document.querySelector<HTMLElement>(".matrix")?.focus()],
   ])
 
   const [debouncedQuery] = useDebouncedValue(query, 200)
@@ -129,10 +132,10 @@ function RunView(ref: RunRef) {
     () => filter.parsed && { parsed: filter.parsed, tests, errorOf, titles: new Map(errors) },
     [filter.parsed, tests, errorOf, errors],
   )
-  const grid = useMemo(() => {
-    if (!plan || !filtering) return plan && buildGrid(plan, undefined, columns)
+  const grids = useMemo(() => {
+    if (!plan || !filtering) return plan ? buildGrids(plan, undefined, columns) : []
     const { parsed, tests, errorOf, titles } = filtering
-    return buildGrid(
+    return buildGrids(
       plan,
       (test) => {
         const state = tests.get(test.id)
@@ -160,7 +163,8 @@ function RunView(ref: RunRef) {
       <Loader />
     )
 
-  const shownIds = grid?.cells.map((cell) => JSON.stringify(cell.test.id)).join(" ") ?? ""
+  const shown = grids.reduce((count, grid) => count + grid.cells.length, 0)
+  const shownIds = grids.flatMap((grid) => grid.cells.map((cell) => JSON.stringify(cell.test.id))).join(" ")
   const activeError = /(?:^|\s)error:(\w+)/.exec(query)?.[1]
   const activeTitle = activeError && errors.find(([key]) => key === activeError)?.[1].title
   const toggleStatus = (status: Status) => setQuery(query.trim() === `status:${status}` ? null : `status:${status}`)
@@ -279,10 +283,10 @@ function RunView(ref: RunRef) {
               </Group>
             }
           />
-          {(filter.parsed || activeTitle) && grid && (
+          {(filter.parsed || activeTitle) && (
             <Group gap="xs">
               <Text size="xs" c="dimmed">
-                Showing {grid.cells.length.toLocaleString()} of {plan.tests.length.toLocaleString()} tests
+                Showing {shown.toLocaleString()} of {plan.tests.length.toLocaleString()} tests
               </Text>
               {activeTitle && (
                 <Pill withRemoveButton onRemove={() => setQuery(null)} size="sm">
@@ -374,24 +378,40 @@ function RunView(ref: RunRef) {
           </Tooltip>
         </Group>
       </Group>
-      {grid && grid.cells.length > 0 ? (
-        <Matrix
-          run={ref}
-          grid={grid}
-          tests={tests}
-          errors={errorOf}
-          errorColors={canvasColors}
-          rowParams={plan.row_params}
-          cell={cell}
-          highlight={highlight}
-          colorErrors={showErrors}
-          onOpen={(test, event) => {
-            const url = pages.log(ref, { test: test.id })
-            if (event.altKey) setQuery(`status:${tests.get(test.id)?.status ?? "pending"}`)
-            else if (event.ctrlKey || event.metaKey) window.open(url)
-            else navigate(url)
+      {grids.length > 0 ? (
+        <Box
+          ref={scroller}
+          style={{
+            display: "grid",
+            gridTemplateColumns: `${layout.labels ? `${layout.labels}px` : "fit-content(320px)"} max-content`,
+            gap: "24px 12px",
+            alignContent: "start",
+            overflow: "auto",
+            flex: 1,
+            minHeight: 0,
           }}
-        />
+        >
+          {grids.map((grid) => (
+            <Matrix
+              key={grid.rowParams.join() || "-"}
+              run={ref}
+              grid={grid}
+              scroller={scroller}
+              tests={tests}
+              errors={errorOf}
+              errorColors={canvasColors}
+              cell={cell}
+              highlight={highlight}
+              colorErrors={showErrors}
+              onOpen={(test, event) => {
+                const url = pages.log(ref, { test: test.id })
+                if (event.altKey) setQuery(`status:${tests.get(test.id)?.status ?? "pending"}`)
+                else if (event.ctrlKey || event.metaKey) window.open(url)
+                else navigate(url)
+              }}
+            />
+          ))}
+        </Box>
       ) : (
         <Text c="dimmed">{plan.tests.length ? "No tests match the filter." : "This run has no tests."}</Text>
       )}
