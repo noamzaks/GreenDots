@@ -53,6 +53,37 @@ export function hash(text: string) {
 }
 
 /**
+ * Follows a server-sent event stream until the returned function is called. Browsers retry dropped streams by
+ * themselves, but may give up for good: Firefox does when the network changes (e.g. a VM's interface comes or
+ * goes). Those are reopened, waiting longer while they keep failing; the server then sends everything again.
+ */
+export function follow(url: string, onMessage: (data: unknown) => void, onError: (error?: string) => void = () => {}) {
+  let source: EventSource | undefined
+  let retry: ReturnType<typeof setTimeout> | undefined
+  let delay = 1000
+  const open = () => {
+    source = new EventSource(url)
+    source.onmessage = (event) => {
+      delay = 1000
+      const data = JSON.parse(event.data)
+      onError(data?.error)
+      if (!data?.error) onMessage(data)
+    }
+    source.onerror = () => {
+      onError("Disconnected, reconnecting…")
+      if (source?.readyState !== EventSource.CLOSED) return
+      retry = setTimeout(open, delay)
+      delay = Math.min(delay * 2, 30_000)
+    }
+  }
+  open()
+  return () => {
+    clearTimeout(retry)
+    source?.close()
+  }
+}
+
+/**
  * Follows a server-sent event stream. It's closed while the tab is hidden (so nobody's tab keeps the server
  * reading the share), unless `background` is set; on reconnecting, the server sends everything again.
  */
@@ -64,26 +95,17 @@ export function useEventStream<T>(url: string | null, onMessage: (data: T) => vo
   const [error, setError] = useState<string>()
   useEffect(() => {
     if (!url) return
-    let source: EventSource | undefined
-    const open = () => {
-      source = new EventSource(url)
-      source.onmessage = (event) => {
-        const data = JSON.parse(event.data)
-        setError(data?.error)
-        if (!data?.error) handler.current(data)
-      }
-      source.onerror = () => setError("Disconnected, reconnecting…")
-    }
+    let close: (() => void) | undefined
     const visibility = () => {
       if (document.hidden && !background) {
-        source?.close()
-        source = undefined
-      } else if (!source) open()
+        close?.()
+        close = undefined
+      } else close ??= follow(url, (data) => handler.current(data as T), setError)
     }
     visibility()
     document.addEventListener("visibilitychange", visibility)
     return () => {
-      source?.close()
+      close?.()
       document.removeEventListener("visibilitychange", visibility)
     }
   }, [url, background])
