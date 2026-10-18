@@ -89,6 +89,22 @@ def pytest_configure(config: pytest.Config) -> None:
     config.pluginmanager.register(Writer(config, Path(directory), worker, shards * per_shard), PLUGIN_NAME)
 
 
+def keywords(item: pytest.Item) -> list[str]:
+    """The names ``-k`` matches a test by (as pytest's ``KeywordMatcher``), but its node id doesn't show."""
+    root = getattr(pytest, "Directory", ())  # pytest < 8 has no directory nodes
+    names = {
+        node.name
+        for node in item.listchain()
+        if not isinstance(node, pytest.Session)
+        and not (isinstance(node, root) and isinstance(node.parent, pytest.Session))
+    }
+    names.update(item.listextrakeywords())
+    names.update(getattr(getattr(item, "function", None), "__dict__", {}))
+    names.update(mark.name for mark in item.iter_markers())
+    path, *rest = item.nodeid.split("::")
+    return sorted(names - {*path.split("/"), *rest})
+
+
 def log_name(nodeid: str) -> str:
     """A test's log file name, the same as the original plugin's."""
     special = any(char in nodeid for char in FILENAME_SPECIAL_CHARS)
@@ -188,6 +204,8 @@ class Writer:
             test["name"] = marker.kwargs.get("name", test["name"])
             test["module"] = marker.kwargs.get("module", test["module"])
             test["params"].update(marker.kwargs.get("params", {}))
+        if extra := keywords(item):
+            test["keywords"] = extra
         self.config.hook.pytest_greendots_test(item=item, test=test)
         test["params"] = {key: format_param(value) for key, value in test["params"].items()}
         return test

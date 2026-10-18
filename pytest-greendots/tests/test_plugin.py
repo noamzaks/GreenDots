@@ -68,9 +68,57 @@ def test_plan_has_the_original_layout(pytester: pytest.Pytester) -> None:
         "module": "test_a",
         "params": {"arch": "x86", "variant": 1},
         "log_file": "test_a.py::test_matrix[x86-1].log.jsonl",
+        "keywords": ["parametrize", "pytestmark"],
     }
     assert tests["test_a.py::TestGroup::test_method[arm]"]["name"] == "TestGroup.test_method"
     assert all((directory / t["log_file"]).exists() for t in tests.values())
+
+
+def test_plan_has_the_keywords_pytest_k_matches(pytester: pytest.Pytester) -> None:
+    pytester.makeconftest(
+        """
+        import json
+        from _pytest.mark import KeywordMatcher
+
+        def pytest_collection_modifyitems(items):
+            for item in items:
+                if item.name == "test_extra":
+                    item.extra_keyword_matches.add("special")
+            names = {item.nodeid: sorted(KeywordMatcher.from_item(item)._names) for item in items}
+            with open("expected.json", "w") as file:
+                json.dump(names, file)
+        """
+    )
+    pytester.makepyfile(
+        test_a="""
+        import pytest
+
+        @pytest.mark.slow
+        class TestGroup:
+            @pytest.mark.parametrize("arch", ["x86"])
+            def test_marked(self, arch):
+                pass
+
+        def test_attribute():
+            pass
+
+        test_attribute.owner = "net"
+
+        def test_extra():
+            pass
+
+        def test_plain():
+            pass
+        """
+    )
+    _, plan, _ = run(pytester)
+    expected = json.loads((pytester.path / "expected.json").read_text())
+    for id, test in planned(plan).items():
+        path, *rest = id.split("::")
+        from_id = {*path.split("/"), *rest}  # what GreenDots knows without the plan's keywords
+        assert from_id.isdisjoint(test.get("keywords", []))
+        assert {*from_id, *test.get("keywords", [])} == set(expected[id])
+    assert "keywords" not in planned(plan)["test_a.py::test_plain"]  # nothing beyond its id
 
 
 def test_log_names_match_the_original_plugin() -> None:
