@@ -8,6 +8,9 @@ const theme = createTheme({
   primaryColor: "green",
   primaryShade: { light: 8, dark: 6 },
   defaultRadius: "md",
+  // the original GreenDots' fonts
+  fontFamily: "'Exo 2 Variable', sans-serif",
+  headings: { fontFamily: "'Exo 2 Variable', sans-serif" },
   // links are neutral, so green keeps meaning "passed"
   components: { Anchor: Anchor.extend({ defaultProps: { c: "bright", underline: "hover" } }) },
 })

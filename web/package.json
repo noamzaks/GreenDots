@@ -11,6 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource-variable/exo-2": "^5.3.0",
+    "@fontsource/jockey-one": "^5.3.0",
     "@mantine/core": "^9.7.2",
     "@mantine/hooks": "^9.7.2",
     "@tabler/icons-react": "^3.49.0",

@@ -1,3 +1,5 @@
+import "@fontsource-variable/exo-2"
+import "@fontsource/jockey-one"
 import "@mantine/core/styles.css"
 import "./globals.css"
 import { ColorSchemeScript, mantineHtmlProps } from "@mantine/core"

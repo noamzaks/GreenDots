@@ -69,7 +69,7 @@ export function Header() {
     <AppShell.Header px="md">
       <Group h="100%" justify="space-between" wrap="nowrap">
         <Breadcrumbs style={{ minWidth: 0, flexWrap: "nowrap" }} separatorMargin={6}>
-          <Anchor component={Link} href="/" fw={800} size="lg" c="green" underline="never">
+          <Anchor component={Link} href="/" ff="'Jockey One', sans-serif" size="xl" c="green" underline="never">
             {/* centered on the capitals, which centering in the line box only does in some browsers */}
             <Box
               component="span"
