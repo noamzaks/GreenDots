@@ -125,9 +125,10 @@ it (it takes effect on restart).
 
 ## Using the UI
 
-- **Filter** (Ctrl/⌘ K) with [Liqe](https://github.com/gajus/liqe) queries over `id`, `name`, `module`, `status`,
-  `error`, `message` and every test param: `status:failed`, `arch:arm -opt:O0`, `name:/compile|link/`. The filter
-  is kept in the URL, so you can share it. The `?` button lists the fields and examples.
+- **Filter** (Ctrl/⌘ K) exactly like `pytest -k`: `test_run and not ssh`, `(compile or link) and x86`. A word
+  matches tests with it in their directories, file, class or name with params, markers or other keywords, ignoring
+  case. Click a status count to show only tests with that status. Filters are kept in the URL, so you can share
+  them. The `?` button has examples.
 - **Hover** a dot for its log tail or failure; **click** it to open its log, Ctrl/⌘-click for a new tab, and
   Alt-click to filter by its status. Or press `G` to focus the matrix and use the arrow keys and `Enter`. `?` lists
   the shortcuts.

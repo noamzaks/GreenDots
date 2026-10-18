@@ -2,7 +2,14 @@ export const STATUSES = ["passed", "failed", "skipped", "running", "pending"] as
 export type Status = (typeof STATUSES)[number]
 
 export type Param = string | number | boolean
-export type PlanTest = { id: string; name: string; module: string; params: Record<string, Param>; log: string }
+export type PlanTest = {
+  id: string
+  name: string
+  module: string
+  params: Record<string, Param>
+  log: string
+  keywords?: string[] // what pytest -k matches besides the names in the id (markers...), from newer plugins
+}
 export type Plan = {
   started_at?: number
   worker_count: number

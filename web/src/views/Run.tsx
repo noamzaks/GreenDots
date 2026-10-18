@@ -39,7 +39,6 @@ import {
   IconHelp,
   IconSearch,
 } from "@tabler/icons-react"
-import { type LiqeQuery, test as matches, parse } from "liqe"
 import { useMemo, useRef, useState } from "react"
 import { Link, useLocation } from "wouter"
 import { ErrorsDrawer } from "@/components/ErrorsDrawer"
@@ -50,6 +49,7 @@ import { useNotificationsSetting, useRunAlerts } from "@/lib/alerts"
 import { apis, COLORS, errorTitle, hash, pages, type RunRef, useRun } from "@/lib/client"
 import { plural } from "@/lib/format"
 import { buildGrids } from "@/lib/grid"
+import { compileKeywords, keywordsOf } from "@/lib/keyword"
 import { mod } from "@/lib/platform"
 import { useQueryParam, useRunRef } from "@/lib/router"
 import { ago, took } from "@/lib/time"
@@ -73,8 +73,11 @@ function RunView(ref: RunRef) {
   )
   useTitle(pages.run(ref), title)
   useRunAlerts(ref, summary, notify)
+  // the box takes pytest -k expressions; status and error group are filters of their own
   const [q, setQuery] = useQueryParam("q")
   const query = q ?? ""
+  const [statusParam, setStatusParam] = useQueryParam("status")
+  const [activeError, setActiveError] = useQueryParam("error")
   const [errorsParam, setErrorsParam] = useQueryParam("errors")
   const showErrors = errorsParam === "true"
   const setShowErrors = (show: boolean) => setErrorsParam(show ? "true" : null)
@@ -105,9 +108,9 @@ function RunView(ref: RunRef) {
   const [debouncedQuery] = useDebouncedValue(query, 200)
   const filter = useMemo(() => {
     try {
-      return { parsed: debouncedQuery.trim() ? (parse(debouncedQuery) as LiqeQuery) : undefined }
-    } catch {
-      return { invalid: true }
+      return { match: debouncedQuery.trim() ? compileKeywords(debouncedQuery.trim()) : undefined }
+    } catch (error) {
+      return { invalid: (error as Error).message }
     }
   }, [debouncedQuery])
 
@@ -131,25 +134,28 @@ function RunView(ref: RunRef) {
 
   // the layout only depends on test states while filtering
   const filtering = useMemo(
-    () => filter.parsed && { parsed: filter.parsed, tests, errorOf, titles: new Map(errors) },
-    [filter.parsed, tests, errorOf, errors],
+    () =>
+      (filter.match || statusParam || activeError) && {
+        match: filter.match,
+        status: statusParam,
+        error: activeError,
+        tests,
+        errorOf,
+      },
+    [filter.match, statusParam, activeError, tests, errorOf],
   )
   const grids = useMemo(() => {
     if (!plan || !filtering) return plan ? buildGrids(plan, undefined, columns) : []
-    const { parsed, tests, errorOf, titles } = filtering
+    const { match, status, error, tests, errorOf } = filtering
     return buildGrids(
       plan,
-      (test) => {
-        const state = tests.get(test.id)
-        const error = errorOf.get(test.id)
-        const fields = { id: test.id, name: test.name, module: test.module, status: state?.status ?? "pending" }
-        const message = error && titles.get(error)?.title
-        return matches(parsed, { ...test.params, ...fields, error, message, reason: state?.reason })
-      },
+      (test) =>
+        (!status || (tests.get(test.id)?.status ?? "pending") === status) &&
+        (!error || errorOf.get(test.id) === error) &&
+        (!match || match(keywordsOf(test))),
       columns,
     )
   }, [plan, filtering, columns])
-  const params = useMemo(() => [...new Set(plan?.tests.flatMap((test) => Object.keys(test.params)))], [plan])
   const canvasColors = useMemo(() => {
     // the canvas needs real colors, not CSS variables
     const style = getComputedStyle(document.documentElement)
@@ -167,9 +173,8 @@ function RunView(ref: RunRef) {
 
   const shown = grids.reduce((count, grid) => count + grid.cells.length, 0)
   const shownIds = grids.flatMap((grid) => grid.cells.map((cell) => JSON.stringify(cell.test.id))).join(" ")
-  const activeError = /(?:^|\s)error:(\w+)/.exec(query)?.[1]
   const activeTitle = activeError && errors.find(([key]) => key === activeError)?.[1].title
-  const toggleStatus = (status: Status) => setQuery(query.trim() === `status:${status}` ? null : `status:${status}`)
+  const toggleStatus = (status: Status) => setStatusParam(statusParam === status ? null : status)
   const subtitle = [
     summary?.started && `started ${ago(summary.started)}`,
     summary?.done && summary.ended && `took ${took(summary.started, summary.ended)}`,
@@ -269,7 +274,7 @@ function RunView(ref: RunRef) {
             leftSection={<IconSearch size={16} />}
             placeholder={mobile ? "Filter tests" : `Filter tests (${mod()} K), e.g. status:failed arch:arm`}
             value={query}
-            error={filter.invalid && "Invalid query - see the syntax help (?)"}
+            error={filter.invalid && `Invalid expression ${filter.invalid} - see the syntax help (?)`}
             onChange={(event) => setQuery(event.currentTarget.value || null)}
             rightSectionWidth={56}
             rightSection={
@@ -282,20 +287,25 @@ function RunView(ref: RunRef) {
                     </ActionIcon>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <FilterHelp params={params} onPick={setQuery} />
+                    <FilterHelp tests={plan.tests} onPick={setQuery} />
                   </Popover.Dropdown>
                 </Popover>
               </Group>
             }
           />
-          {(filter.parsed || activeTitle) && (
+          {filtering && (
             <Group gap="xs">
               <Text size="xs" c="dimmed">
                 Showing {shown.toLocaleString()} of {plan.tests.length.toLocaleString()} tests
               </Text>
-              {activeTitle && (
-                <Pill withRemoveButton onRemove={() => setQuery(null)} size="sm">
-                  {activeTitle.slice(0, 80)}
+              {statusParam && (
+                <Pill withRemoveButton onRemove={() => setStatusParam(null)} size="sm">
+                  {statusParam}
+                </Pill>
+              )}
+              {activeError && (
+                <Pill withRemoveButton onRemove={() => setActiveError(null)} size="sm">
+                  {(activeTitle || "an error that's gone").slice(0, 80)}
                 </Pill>
               )}
             </Group>
@@ -303,7 +313,7 @@ function RunView(ref: RunRef) {
         </Stack>
         <Group gap={6} mt={4}>
           {STATUSES.filter((status) => summary?.[status]).map((status) => {
-            const active = query.trim() === `status:${status}`
+            const active = statusParam === status
             return (
               <Tooltip
                 key={status}
@@ -410,7 +420,7 @@ function RunView(ref: RunRef) {
               colorErrors={showErrors}
               onOpen={(test, event) => {
                 const url = pages.log(ref, { test: test.id })
-                if (event.altKey) setQuery(`status:${tests.get(test.id)?.status ?? "pending"}`)
+                if (event.altKey) setStatusParam(tests.get(test.id)?.status ?? "pending")
                 else if (event.ctrlKey || event.metaKey) window.open(url)
                 else navigate(url)
               }}
@@ -426,11 +436,11 @@ function RunView(ref: RunRef) {
         errors={errors}
         colors={errorColors}
         collectErrors={plan.errors.length}
-        active={activeError}
+        active={activeError ?? undefined}
         highlight={highlight}
         onHighlight={setHighlight}
         onPick={(id) => {
-          setQuery(`error:${id}`)
+          setActiveError(id === activeError ? null : id)
           if (mobile) setShowErrors(false)
         }}
         onShowCollectErrors={() => setCollectErrorsHidden(false)}

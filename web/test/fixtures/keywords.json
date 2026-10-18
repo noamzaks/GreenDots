@@ -1,0 +1,178 @@
+{
+  "_comment": "Written by pytest's own -k (_pytest.mark.expression) for these names; regenerate rather than edit.",
+  "names": ["tests", "libvirt", "test_machine.py", "TestGroup", "test_run[ppc64le-ssh]", "slow", "parametrize"],
+  "cases": [
+    {
+      "expression": "",
+      "matches": false
+    },
+    {
+      "expression": "run",
+      "matches": true
+    },
+    {
+      "expression": "RUN",
+      "matches": true
+    },
+    {
+      "expression": "ssh",
+      "matches": true
+    },
+    {
+      "expression": "telnet",
+      "matches": false
+    },
+    {
+      "expression": "not ssh",
+      "matches": false
+    },
+    {
+      "expression": "run and ssh",
+      "matches": true
+    },
+    {
+      "expression": "run and telnet",
+      "matches": false
+    },
+    {
+      "expression": "run or telnet",
+      "matches": true
+    },
+    {
+      "expression": "not run or slow",
+      "matches": true
+    },
+    {
+      "expression": "not (run or telnet)",
+      "matches": false
+    },
+    {
+      "expression": "(run or telnet) and not ssh",
+      "matches": false
+    },
+    {
+      "expression": "not not run",
+      "matches": true
+    },
+    {
+      "expression": "run and not slow",
+      "matches": false
+    },
+    {
+      "expression": "test_machine.py",
+      "matches": true
+    },
+    {
+      "expression": "ppc64le-ssh",
+      "matches": true
+    },
+    {
+      "expression": "run[ppc64le",
+      "matches": true
+    },
+    {
+      "expression": "libvirt/test",
+      "matches": false
+    },
+    {
+      "expression": "tests/libvirt",
+      "matches": false
+    },
+    {
+      "expression": "Test",
+      "matches": true
+    },
+    {
+      "expression": "group",
+      "matches": true
+    },
+    {
+      "expression": "test_machine.py::test_run",
+      "matches": false
+    },
+    {
+      "expression": "True",
+      "matches": false
+    },
+    {
+      "expression": "None",
+      "matches": false
+    },
+    {
+      "expression": "False",
+      "matches": false
+    },
+    {
+      "expression": "-ssh",
+      "matches": true
+    },
+    {
+      "expression": "a.b+c\\\\d/e:f",
+      "matches": false
+    },
+    {
+      "expression": "run and",
+      "error": "at column 8: expected not OR left parenthesis OR identifier; got end of input"
+    },
+    {
+      "expression": "and run",
+      "error": "at column 1: expected not OR left parenthesis OR identifier; got and"
+    },
+    {
+      "expression": "(run",
+      "error": "at column 5: expected right parenthesis; got end of input"
+    },
+    {
+      "expression": "run)",
+      "error": "at column 4: expected end of input; got right parenthesis"
+    },
+    {
+      "expression": "run telnet",
+      "error": "at column 5: expected end of input; got identifier"
+    },
+    {
+      "expression": "run ssh",
+      "error": "at column 5: expected end of input; got identifier"
+    },
+    {
+      "expression": "not",
+      "error": "at column 4: expected not OR left parenthesis OR identifier; got end of input"
+    },
+    {
+      "expression": "()",
+      "error": "at column 2: expected not OR left parenthesis OR identifier; got right parenthesis"
+    },
+    {
+      "expression": "run or or telnet",
+      "error": "at column 8: expected not OR left parenthesis OR identifier; got or"
+    },
+    {
+      "expression": "run(x=1)",
+      "error": "Keyword expressions do not support call parameters."
+    },
+    {
+      "expression": "run(x=\"a\")",
+      "error": "Keyword expressions do not support call parameters."
+    },
+    {
+      "expression": "'run'",
+      "error": "at column 1: expected not OR left parenthesis OR identifier; got string literal"
+    },
+    {
+      "expression": "run$",
+      "error": "at column 4: unexpected character \"$\""
+    },
+    {
+      "expression": "run & ssh",
+      "error": "at column 5: unexpected character \"&\""
+    },
+    {
+      "expression": "run(x=1",
+      "error": "at column 8: expected right parenthesis; got end of input"
+    },
+    {
+      "expression": "\"unclosed",
+      "error": "at column 1: closing quote \"\"\" is missing"
+    }
+  ]
+}
