@@ -64,13 +64,15 @@ export default function RunPage() {
 }
 
 function RunView(ref: RunRef) {
-  const { project, run } = ref
+  const { project, source, run } = ref
   const [, navigate] = useLocation()
   const [notify, toggleNotify] = useNotificationsSetting()
   const { plan, tests, summary, title, polling, error } = useRun(ref, notify)
-  useDocumentTitle(`${summary?.failed ? `✗${summary.failed} ` : ""}${title ?? run} · ${project} · GreenDots`)
+  useDocumentTitle(
+    `${summary?.failed ? `✗${summary.failed} ` : ""}${title ?? run} (${source}) · ${project} · GreenDots`,
+  )
   useTitle(pages.run(ref), title)
-  useRunAlerts(project, run, summary, notify)
+  useRunAlerts(ref, summary, notify)
   const [q, setQuery] = useQueryParam("q")
   const query = q ?? ""
   const [errorsParam, setErrorsParam] = useQueryParam("errors")
@@ -83,7 +85,7 @@ function RunView(ref: RunRef) {
   const [highlight, setHighlight] = useState<string>()
   const [help, setHelp] = useState(false)
   const [collectErrorsHidden, setCollectErrorsHidden] = useLocalStorage({
-    key: `greendots-collect-errors-hidden-${project}/${run}`,
+    key: `greendots-collect-errors-hidden-${source}/${project}/${run}`,
     defaultValue: false,
   })
   const mobile = useMediaQuery("(max-width: 48em)")
@@ -182,6 +184,9 @@ function RunView(ref: RunRef) {
           <Title order={3} lineClamp={1}>
             {title ?? run}
           </Title>
+          <Badge size="xs" variant="default" style={{ flexShrink: 0, alignSelf: "center" }}>
+            {source}
+          </Badge>
           <Text size="sm" c="dimmed">
             {subtitle.join(" · ")}
           </Text>

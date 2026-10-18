@@ -43,7 +43,7 @@ export default function LogPage() {
 }
 
 function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
-  const { run } = ref
+  const { source, run } = ref
   const [test, session] = "test" in target ? [target.test, null] : [null, target.session]
   const log = useLog(ref, target)
   const list = useRef<VirtuosoHandle>(null)
@@ -97,7 +97,7 @@ function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
     if (loaded && start > 0 && lines.length < 100) loadOlder()
   }, [loaded, start, lines.length, loadOlder])
 
-  useDocumentTitle(`${title} · ${run} · GreenDots`)
+  useDocumentTitle(`${title} · ${run} (${source}) · GreenDots`)
   return (
     <Stack h="calc(100dvh - 84px)" gap="sm">
       <Group justify="space-between" wrap="nowrap" gap="xs">
