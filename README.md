@@ -235,8 +235,15 @@ The original plugin's `live_progress` fixture works too.
 
 ## Read runs from Python
 
-[`greendots-client`](greendots-client) reads the same directories, e.g. to wait for a CI run and report its
-failures (`pip install ./greendots ./greendots-client`):
+[`greendots-client`](greendots-client) reads the same directories, from the terminal or from Python
+(`pip install ./greendots ./greendots-client`):
+
+```bash
+greendots-client wait my-project/ci-123 --timeout 3600 && echo all passed
+greendots-client log my-project "test_flash[rpi4]" -f
+```
+
+For example, to wait for a CI run and report its failures:
 
 ```python
 from greendots.client import Source

@@ -8,6 +8,9 @@ requires-python = ">=3.9"
 dependencies = ["greendots>=0.3", "tomli>=1.1; python_version < '3.11'"]
 classifiers = ["Programming Language :: Python :: 3", "Typing :: Typed"]
 
+[project.scripts]
+greendots-client = "greendots.client.cli:run"
+
 [dependency-groups]
 dev = ["pytest>=7", "pytest-greendots", "ruff>=0.6", "mypy>=1.11", "pyright>=1.1.380", "tomli>=1.1"]
 
@@ -29,7 +32,7 @@ line-length = 110
 [tool.mypy]
 strict = true
 files = ["src", "tests"]
-mypy_path = "src"
+mypy_path = ["src", "tests"]
 explicit_package_bases = true
 
 [tool.pyright]

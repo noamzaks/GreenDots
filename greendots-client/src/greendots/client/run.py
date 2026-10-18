@@ -192,6 +192,18 @@ class Run:
             test.name, test.module = event.get("name", test.name), event.get("module", test.module)
             test.params = {**test.params, **event.get("params", {})}
 
+    @property
+    def updated(self) -> float | None:
+        """When a status file last changed (seconds since the epoch): a run that isn't done but hasn't changed
+        for long may have stopped, e.g. crashed."""
+        times = []
+        for index in range(len(self._workers) if self._load_plan() else 0):
+            try:
+                times.append((self.path / status_file(index)).stat().st_mtime)
+            except FileNotFoundError:
+                continue
+        return max(times, default=None)
+
     def result(self, test: str) -> Result:
         """A test's latest result, by node id (``KeyError`` if it isn't in the plan)."""
         self.refresh()

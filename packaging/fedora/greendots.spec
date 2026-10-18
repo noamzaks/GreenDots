@@ -128,6 +128,7 @@ install -Dpm 644 packaging/fedora/firewalld.xml %{buildroot}%{_prefix}/lib/firew
 
 %files -n python3-greendots-client
 %doc greendots-client/README.md
+%{_bindir}/greendots-client
 %{python3_sitelib}/greendots/client
 %{python3_sitelib}/greendots_client-%{version}.dist-info
 

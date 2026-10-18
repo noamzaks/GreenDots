@@ -5,39 +5,16 @@ import time
 from pathlib import Path
 
 import pytest
+from conftest import Record
 
 from greendots.client import Run, Source, Summary
 
 ORIGINAL = Path(__file__).parent / "fixtures" / "original"
 
-TESTS = """
-import logging, pytest
 
-@pytest.mark.slow
-@pytest.mark.parametrize("arch", ["x86", "arm"])
-def test_build(arch):
-    print(f"building for {arch}")
-    logging.getLogger("build").info("done")
-
-def test_fail():
-    assert 1 == 2
-
-def test_skip():
-    pytest.skip("not today")
-"""
-
-
-def record(pytester: pytest.Pytester, run: str = "run-1", *args: str) -> Path:
-    """Runs pytester's tests with the plugin, into ``<pytester>/source/project/<run>``."""
-    directory = pytester.path / "source" / "project" / run
-    pytester.runpytest("--greendots", str(directory), *args)
-    return directory
-
-
-def test_lists_projects_and_runs_newest_first(pytester: pytest.Pytester) -> None:
-    pytester.makepyfile(test_a=TESTS)
-    first = record(pytester, "run-9")
-    second = record(pytester, "run-10")
+def test_lists_projects_and_runs_newest_first(pytester: pytest.Pytester, record: Record) -> None:
+    first = record("run-9")
+    second = record("run-10")
     os.utime(first, (0, 0))
     source = Source(pytester.path / "source")
     assert [project.name for project in source.projects()] == ["project"]
@@ -47,9 +24,8 @@ def test_lists_projects_and_runs_newest_first(pytester: pytest.Pytester) -> None
     assert latest is not None and latest.path == second
 
 
-def test_reads_results_and_summary(pytester: pytest.Pytester) -> None:
-    pytester.makepyfile(test_a=TESTS)
-    run = Run(record(pytester))
+def test_reads_results_and_summary(record: Record) -> None:
+    run = Run(record())
     assert run.summary == Summary(passed=2, failed=1, skipped=1, done=True)
     assert run.summary.total == 4
     failed = run.result("test_a.py::test_fail")
@@ -63,9 +39,8 @@ def test_reads_results_and_summary(pytester: pytest.Pytester) -> None:
     assert run.row_params == ["arch"] and run.started_at is not None
 
 
-def test_reads_logs(pytester: pytest.Pytester) -> None:
-    pytester.makepyfile(test_a=TESTS)
-    run = Run(record(pytester))
+def test_reads_logs(record: Record) -> None:
+    run = Run(record())
     log = run.log("test_a.py::test_build[arm]")
     entries = list(log)
     assert ("stdout", "building for arm") in [(entry.name, entry.message) for entry in entries]
