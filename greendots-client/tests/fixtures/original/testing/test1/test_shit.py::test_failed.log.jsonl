@@ -1,0 +1,1 @@
+{"name": "root", "level": "ERROR", "time": 1770491696.9994364, "message": "def test_failed():\n>       assert False\nE       assert False\n\ntest_shit.py:15: AssertionError\nNoneType: None"}

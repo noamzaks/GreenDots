@@ -3,8 +3,6 @@ a ``<test>.log.jsonl`` per test and a ``session.<worker>.log.jsonl`` for output 
 
 from __future__ import annotations
 
-import base64
-import hashlib
 import json
 import logging
 import operator
@@ -17,19 +15,18 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import pytest
+from greendots.core import PLAN, CollectError, Plan, PlanTest, log_name, session_log_file, status_file
 
-from . import hooks
+from . import hookspecs
 from .capture import Output, Records
-from .hooks import PlanTest
 
 T = TypeVar("T")
 PLUGIN_NAME = "greendots-writer"
 SEVERITY = {"passed": 0, "skipped": 1, "failed": 2}
-FILENAME_SPECIAL_CHARS = '<>"/\\|?*'
 
 
 def pytest_addhooks(pluginmanager: pytest.PytestPluginManager) -> None:
-    pluginmanager.add_hookspecs(hooks)
+    pluginmanager.add_hookspecs(hookspecs)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -105,21 +102,6 @@ def keywords(item: pytest.Item) -> list[str]:
     return sorted(names - {*path.split("/"), *rest})
 
 
-def log_name(nodeid: str) -> str:
-    """A test's log file name, the same as the original plugin's."""
-    special = any(char in nodeid for char in FILENAME_SPECIAL_CHARS)
-    digest = base64.b32encode(hashlib.blake2b(nodeid.encode(), digest_size=5).digest()).decode()
-    name = nodeid
-    if len(nodeid) + (9 if special else 0) > 110:
-        name = f"{nodeid[:50]}-{digest}-{nodeid[-50:]}"
-    elif special:
-        name = f"{nodeid}-{digest}"
-    if special:
-        for char in FILENAME_SPECIAL_CHARS:
-            name = name.replace(char, "_")
-    return name + ".log.jsonl"
-
-
 def format_param(value: Any) -> Any:
     for method in ("__greendots_format__", "__livelog_format__"):
         if hasattr(value, method):
@@ -161,14 +143,14 @@ class Writer:
     def __init__(self, config: pytest.Config, directory: Path, worker: int, workers: int) -> None:
         self.config, self.dir, self.worker, self.workers = config, directory, worker, workers
         directory.mkdir(parents=True, exist_ok=True)
-        self.status = open(directory / f"status.{worker}.jsonl", "a", encoding="utf-8")  # noqa: SIM115
+        self.status = open(directory / status_file(worker), "a", encoding="utf-8")  # noqa: SIM115
         self.lock = threading.Lock()
-        self.session_log = LogFile(directory / f"session.{worker}.log.jsonl", append=True)
+        self.session_log = LogFile(directory / session_log_file(worker), append=True)
         self.log: LogFile | None = None
         self.test: str | None = None
         self.outcome = "passed"
         self.logged: set[str] = set()  # tests whose log was started, so reruns append to it
-        self.errors: list[dict[str, str]] = []
+        self.errors: list[CollectError] = []
         self.row_params: list[str] | None = None
         self.records = Records(self.write, log_level(config.getini("greendots_log_level")))
         self.output = Output(self.write)
@@ -233,7 +215,7 @@ class Writer:
         groups: dict[str, list[dict[str, Any]]] = {}
         for test in tests:  # the original layout: tests grouped by module
             groups.setdefault(test["module"], []).append({k: v for k, v in test.items() if k != "module"})
-        plan = {
+        plan: Plan = {
             "version": 2,
             "started_at": time.time(),
             "worker_count": self.workers,
@@ -242,9 +224,9 @@ class Writer:
             "errors": self.errors,
         }
         self.config.hook.pytest_greendots_plan(session=session, plan=plan)
-        temporary = self.dir / f"plan.json.{os.getpid()}"
+        temporary = self.dir / f"{PLAN}.{os.getpid()}"
         temporary.write_text(json.dumps(plan, indent=1, default=str), encoding="utf-8")
-        os.replace(temporary, self.dir / "plan.json")  # readers never see a partial plan
+        os.replace(temporary, self.dir / PLAN)  # readers never see a partial plan
 
     # --- Running tests ---
 
@@ -327,7 +309,7 @@ class CrashRecorder:
             {"type": "call", "outcome": "failed", "exception": report.longreprtext},
             {"type": "finish", "outcome": "failed"},
         ]
-        with open(self.dir / f"status.{worker}.jsonl", "a", encoding="utf-8") as status:
+        with open(self.dir / status_file(worker), "a", encoding="utf-8") as status:
             status.writelines(
                 json.dumps({**event, "test": report.nodeid, "time": time.time()}) + "\n" for event in events
             )

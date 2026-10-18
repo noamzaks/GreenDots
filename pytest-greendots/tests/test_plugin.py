@@ -3,8 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
-from greendots.plugin import log_name
+from greendots.core import log_name
 
 TESTS = """
 import logging, sys, pytest
@@ -119,13 +118,6 @@ def test_plan_has_the_keywords_pytest_k_matches(pytester: pytest.Pytester) -> No
         assert from_id.isdisjoint(test.get("keywords", []))
         assert {*from_id, *test.get("keywords", [])} == set(expected[id])
     assert "keywords" not in planned(plan)["test_a.py::test_plain"]  # nothing beyond its id
-
-
-def test_log_names_match_the_original_plugin() -> None:
-    assert log_name("t.py::test") == "t.py::test.log.jsonl"
-    assert log_name("dir/t.py::test").startswith("dir_t.py::test-")
-    long = log_name("t.py::test[" + "x" * 200 + "]")
-    assert len(long) < 130 and long.endswith("x].log.jsonl")
 
 
 def test_statuses(pytester: pytest.Pytester) -> None:

@@ -1,14 +1,17 @@
 # GreenDots
 
-A live pytest matrix viewer. `pytest-greendots/` is the pytest plugin that writes run data, and `web/` is the
-Next.js + Mantine app that reads it from local directories and network shares. The README explains the features, the
-data layout and how the web app spares the share. Read it first.
+A live pytest matrix viewer. `pytest-greendots/` is the pytest plugin that writes run data, `greendots/` has the
+models and layout of its files (shared with the plugin), `greendots-client/` reads runs from Python, and `web/` is the
+Next.js + Mantine app that reads them from local directories and network shares. The Python packages are a uv
+workspace sharing the `greendots` namespace (`greendots.core`, `greendots.plugin`, `greendots.client`). The README
+explains the features, the data layout and how the web app spares the share. Read it first.
 
 ## Commands
 
 ```bash
 cd pytest-greendots && uv run pytest                     # plugin tests (pytester)
-cd pytest-greendots && uv run ruff check && uv run ruff format --check && uv run mypy && uv run pyright
+cd greendots-client && uv run pytest                     # client tests
+for p in greendots pytest-greendots greendots-client; do (cd $p && uv run ruff check && uv run ruff format --check && uv run mypy && uv run pyright); done
 cd web && bun run test && bun run lint && bunx tsc --noEmit && bun run build
 ```
 

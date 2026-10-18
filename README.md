@@ -15,6 +15,10 @@ It's built for big suites (20k+ tests, logs of any size) and for run data on net
 - **[`pytest-greendots/`](pytest-greendots)**: the pytest plugin. It writes each run's plan, an append-only status
   stream per worker, and a log per test that captures **all** output: log records of every logger, `print`s, and
   raw writes to stdout and stderr by subprocesses and C code, live.
+- **[`greendots/`](greendots)**: the files a run is made of, as typed models and their layout, shared by the plugin
+  and the client.
+- **[`greendots-client/`](greendots-client)**: reads runs from Python: a project's runs, a test's result, its log
+  (live, too), or waiting for a run to finish.
 - **[`web/`](web)**: a Next.js + Mantine app that runs on your machine. It mirrors the directories into memory,
   touching them as little as possible, and serves the UI, a single-page app that gets live updates over server-sent
   events. It also reads runs written by the original GreenDots plugin.
@@ -32,7 +36,7 @@ You need Python ≥ 3.9 for the plugin and [Bun](https://bun.sh) (or Node ≥ 22
 ### 1. Install the plugin into your test environment
 
 ```bash
-pip install ./pytest-greendots
+pip install ./greendots ./pytest-greendots
 ```
 
 ### 2. Run your tests with `--greendots`
@@ -67,7 +71,8 @@ On the home page, **pin** (📌) the projects you care about to the top (pins ar
 
 `packaging/fedora/build.sh` builds RPMs in a Fedora container (needs Podman) into `packaging/fedora/rpms/`:
 `greendots`, a `greendots` service on `0.0.0.0:7357` that reads runs from `/var/opt/greendots2` (a directory every
-user can write runs to), and `python3-pytest-greendots`, the plugin.
+user can write runs to), `python3-pytest-greendots`, the plugin, `python3-greendots-client`, the Python client, and
+`python3-greendots`, which they share.
 
 ```bash
 packaging/fedora/build.sh
@@ -86,7 +91,7 @@ pytest --greendots=/var/opt/greendots2/my-project/$(date +%Y-%m-%d_%H-%M-%S)
 ```
 
 The system Python has the plugin already. A virtualenv doesn't see it, so add the plugin to the project instead,
-e.g. `uv add /path/to/GreenDots/pytest-greendots` or `pip install /path/to/GreenDots/pytest-greendots`.
+e.g. `pip install /path/to/GreenDots/greendots /path/to/GreenDots/pytest-greendots`.
 
 The build downloads Bun and the web app's dependencies, so it needs the internet. The `greendots` RPM holds native
 modules, so build it on the architecture you install it on (`FEDORA=43 packaging/fedora/build.sh` targets another
@@ -171,7 +176,7 @@ Or in `pytest.ini`: `greendots_row_params = arch os`.
 
 ```python
 import pytest
-from greendots import TestInfo
+from greendots.plugin import TestInfo
 
 @pytest.mark.greendots(name="boot", module="smoke", params={"board": "rpi4"})
 def test_boot_rpi4_with_default_config() -> None: ...
@@ -191,7 +196,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from greendots import PlanTest
+    from greendots.plugin import PlanTest
 
 @pytest.hookimpl(optionalhook=True)  # the conftest keeps working without the plugin
 def pytest_greendots_test(item: pytest.Item, test: PlanTest) -> None:
@@ -207,7 +212,7 @@ method.
 Running dots fill up like a pie:
 
 ```python
-from greendots import Progress
+from greendots.plugin import Progress
 
 def test_flash(greendots_progress: Progress) -> None:
     for block in greendots_progress.track(range(64)):
@@ -227,6 +232,20 @@ The original plugin's `live_progress` fixture works too.
 - `greendots_log_level = INFO` in `pytest.ini` records only logs of that level and above (default: `DEBUG`).
 - Several pytest processes (e.g. on several machines, each optionally with xdist) can write to the same run: give
   each `--greendots-worker-id=<i> --greendots-worker-count=<n>`. Process 0 writes the plan.
+
+## Read runs from Python
+
+[`greendots-client`](greendots-client) reads the same directories, e.g. to wait for a CI run and report its
+failures (`pip install ./greendots ./greendots-client`):
+
+```python
+from greendots.client import Source
+
+run = Source("/media/greendots").project("my-project").latest()
+summary = run.wait(timeout=3600)
+for result in run.failures():
+    print(result.test.id, run.log(result.test.id).tail(5))
+```
 
 ## What gets written
 
@@ -280,7 +299,8 @@ The API is described at `/api`.
 
 ```bash
 cd pytest-greendots && uv run pytest                        # plugin tests (pytester, incl. xdist and capture modes)
-cd pytest-greendots && uv run ruff check && uv run ruff format --check && uv run mypy && uv run pyright
+cd greendots-client && uv run pytest                        # client tests, on runs the plugin writes
+for p in greendots pytest-greendots greendots-client; do (cd $p && uv run ruff check && uv run ruff format --check && uv run mypy && uv run pyright); done
 cd web && bun run test && bun run lint                      # web app tests (vitest) and Biome
 cd web && bun run dev                                       # the UI on http://localhost:3000
 ```

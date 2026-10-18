@@ -1,0 +1,510 @@
+{"type": "start", "test": "test_shit.py::test_something[0]", "time": 1770491496.6103647}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[0]", "time": 1770491496.6106346}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[0]", "time": 1770491498.6149135}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[0]", "time": 1770491498.6154635}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[0]", "time": 1770491498.6155193}
+{"type": "start", "test": "test_shit.py::test_something[1]", "time": 1770491498.6161182}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[1]", "time": 1770491498.6164994}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[1]", "time": 1770491500.620568}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[1]", "time": 1770491500.6207664}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[1]", "time": 1770491500.6207933}
+{"type": "start", "test": "test_shit.py::test_something[2]", "time": 1770491500.62108}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[2]", "time": 1770491500.6213245}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[2]", "time": 1770491502.6244152}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[2]", "time": 1770491502.6257684}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[2]", "time": 1770491502.6259112}
+{"type": "start", "test": "test_shit.py::test_something[3]", "time": 1770491502.6280932}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[3]", "time": 1770491502.6293342}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[3]", "time": 1770491504.633949}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[3]", "time": 1770491504.6343508}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[3]", "time": 1770491504.634406}
+{"type": "start", "test": "test_shit.py::test_something[4]", "time": 1770491504.6347876}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[4]", "time": 1770491504.6350203}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[4]", "time": 1770491506.6402335}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[4]", "time": 1770491506.6405392}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[4]", "time": 1770491506.6405756}
+{"type": "start", "test": "test_shit.py::test_something[5]", "time": 1770491506.6410935}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[5]", "time": 1770491506.6413734}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[5]", "time": 1770491508.6418014}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[5]", "time": 1770491508.64197}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[5]", "time": 1770491508.6419907}
+{"type": "start", "test": "test_shit.py::test_something[6]", "time": 1770491508.6422894}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[6]", "time": 1770491508.6424353}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[6]", "time": 1770491510.6460638}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[6]", "time": 1770491510.64678}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[6]", "time": 1770491510.6468625}
+{"type": "start", "test": "test_shit.py::test_something[7]", "time": 1770491510.647688}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[7]", "time": 1770491510.6482594}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[7]", "time": 1770491512.649055}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[7]", "time": 1770491512.6494513}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[7]", "time": 1770491512.6495037}
+{"type": "start", "test": "test_shit.py::test_something[8]", "time": 1770491512.6499991}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[8]", "time": 1770491512.6503537}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[8]", "time": 1770491514.650806}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[8]", "time": 1770491514.6509898}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[8]", "time": 1770491514.6510236}
+{"type": "start", "test": "test_shit.py::test_something[9]", "time": 1770491514.6513703}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[9]", "time": 1770491514.6515326}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[9]", "time": 1770491516.6543303}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[9]", "time": 1770491516.6545894}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[9]", "time": 1770491516.6549578}
+{"type": "start", "test": "test_shit.py::test_something[10]", "time": 1770491516.6554317}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[10]", "time": 1770491516.6556597}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[10]", "time": 1770491518.6563706}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[10]", "time": 1770491518.6565292}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[10]", "time": 1770491518.6565506}
+{"type": "start", "test": "test_shit.py::test_something[11]", "time": 1770491518.6567957}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[11]", "time": 1770491518.6569355}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[11]", "time": 1770491520.6594555}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[11]", "time": 1770491520.6598034}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[11]", "time": 1770491520.6598425}
+{"type": "start", "test": "test_shit.py::test_something[12]", "time": 1770491520.6605682}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[12]", "time": 1770491520.6608446}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[12]", "time": 1770491522.6616375}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[12]", "time": 1770491522.661798}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[12]", "time": 1770491522.66182}
+{"type": "start", "test": "test_shit.py::test_something[13]", "time": 1770491522.6624382}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[13]", "time": 1770491522.6626163}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[13]", "time": 1770491524.6630397}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[13]", "time": 1770491524.6634688}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[13]", "time": 1770491524.6635072}
+{"type": "start", "test": "test_shit.py::test_something[14]", "time": 1770491524.6638203}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[14]", "time": 1770491524.6640086}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[14]", "time": 1770491526.6658714}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[14]", "time": 1770491526.6660247}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[14]", "time": 1770491526.6660454}
+{"type": "start", "test": "test_shit.py::test_something[15]", "time": 1770491526.6663804}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[15]", "time": 1770491526.666544}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[15]", "time": 1770491528.6678455}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[15]", "time": 1770491528.6683593}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[15]", "time": 1770491528.6684332}
+{"type": "start", "test": "test_shit.py::test_something[16]", "time": 1770491528.6693375}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[16]", "time": 1770491528.669693}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[16]", "time": 1770491530.6710124}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[16]", "time": 1770491530.6713123}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[16]", "time": 1770491530.6713455}
+{"type": "start", "test": "test_shit.py::test_something[17]", "time": 1770491530.6716542}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[17]", "time": 1770491530.671835}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[17]", "time": 1770491532.6748915}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[17]", "time": 1770491532.6756082}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[17]", "time": 1770491532.6756752}
+{"type": "start", "test": "test_shit.py::test_something[18]", "time": 1770491532.6789303}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[18]", "time": 1770491532.6796618}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[18]", "time": 1770491534.6839373}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[18]", "time": 1770491534.6843708}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[18]", "time": 1770491534.6844091}
+{"type": "start", "test": "test_shit.py::test_something[19]", "time": 1770491534.6850984}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[19]", "time": 1770491534.6854534}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[19]", "time": 1770491536.6859372}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[19]", "time": 1770491536.6860912}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[19]", "time": 1770491536.686122}
+{"type": "start", "test": "test_shit.py::test_something[20]", "time": 1770491536.6864827}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[20]", "time": 1770491536.6866193}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[20]", "time": 1770491538.6902714}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[20]", "time": 1770491538.6915984}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[20]", "time": 1770491538.6917334}
+{"type": "start", "test": "test_shit.py::test_something[21]", "time": 1770491538.6936047}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[21]", "time": 1770491538.694242}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[21]", "time": 1770491540.6947591}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[21]", "time": 1770491540.6949177}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[21]", "time": 1770491540.6949394}
+{"type": "start", "test": "test_shit.py::test_something[22]", "time": 1770491540.695374}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[22]", "time": 1770491540.6955585}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[22]", "time": 1770491542.7006102}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[22]", "time": 1770491542.7009957}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[22]", "time": 1770491542.7010164}
+{"type": "start", "test": "test_shit.py::test_something[23]", "time": 1770491542.7013192}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[23]", "time": 1770491542.701462}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[23]", "time": 1770491544.7018335}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[23]", "time": 1770491544.7019925}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[23]", "time": 1770491544.7020135}
+{"type": "start", "test": "test_shit.py::test_something[24]", "time": 1770491544.7025132}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[24]", "time": 1770491544.7026787}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[24]", "time": 1770491546.7055407}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[24]", "time": 1770491546.7057197}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[24]", "time": 1770491546.705743}
+{"type": "start", "test": "test_shit.py::test_something[25]", "time": 1770491546.7060373}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[25]", "time": 1770491546.7066689}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[25]", "time": 1770491548.7103286}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[25]", "time": 1770491548.7105029}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[25]", "time": 1770491548.7105236}
+{"type": "start", "test": "test_shit.py::test_something[26]", "time": 1770491548.710803}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[26]", "time": 1770491548.7109416}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[26]", "time": 1770491550.7144098}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[26]", "time": 1770491550.7145948}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[26]", "time": 1770491550.7146165}
+{"type": "start", "test": "test_shit.py::test_something[27]", "time": 1770491550.7148879}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[27]", "time": 1770491550.7150288}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[27]", "time": 1770491552.7163794}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[27]", "time": 1770491552.7165403}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[27]", "time": 1770491552.7165606}
+{"type": "start", "test": "test_shit.py::test_something[28]", "time": 1770491552.7168207}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[28]", "time": 1770491552.7169564}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[28]", "time": 1770491554.7215052}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[28]", "time": 1770491554.7216976}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[28]", "time": 1770491554.72172}
+{"type": "start", "test": "test_shit.py::test_something[29]", "time": 1770491554.721978}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[29]", "time": 1770491554.7221165}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[29]", "time": 1770491556.7226715}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[29]", "time": 1770491556.7228615}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[29]", "time": 1770491556.7228844}
+{"type": "start", "test": "test_shit.py::test_something[30]", "time": 1770491556.7232592}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[30]", "time": 1770491556.7234292}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[30]", "time": 1770491558.7238955}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[30]", "time": 1770491558.7240748}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[30]", "time": 1770491558.7241054}
+{"type": "start", "test": "test_shit.py::test_something[31]", "time": 1770491558.7247841}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[31]", "time": 1770491558.725004}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[31]", "time": 1770491560.725611}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[31]", "time": 1770491560.7257943}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[31]", "time": 1770491560.7258172}
+{"type": "start", "test": "test_shit.py::test_something[32]", "time": 1770491560.72612}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[32]", "time": 1770491560.7264795}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[32]", "time": 1770491562.7269206}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[32]", "time": 1770491562.7271142}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[32]", "time": 1770491562.7273366}
+{"type": "start", "test": "test_shit.py::test_something[33]", "time": 1770491562.7276657}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[33]", "time": 1770491562.7278593}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[33]", "time": 1770491564.7284853}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[33]", "time": 1770491564.7287908}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[33]", "time": 1770491564.7288172}
+{"type": "start", "test": "test_shit.py::test_something[34]", "time": 1770491564.7293317}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[34]", "time": 1770491564.7296119}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[34]", "time": 1770491566.731356}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[34]", "time": 1770491566.7316267}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[34]", "time": 1770491566.731656}
+{"type": "start", "test": "test_shit.py::test_something[35]", "time": 1770491566.7319574}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[35]", "time": 1770491566.7321298}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[35]", "time": 1770491568.732736}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[35]", "time": 1770491568.73561}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[35]", "time": 1770491568.73566}
+{"type": "start", "test": "test_shit.py::test_something[36]", "time": 1770491568.7359424}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[36]", "time": 1770491568.736113}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[36]", "time": 1770491570.7368903}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[36]", "time": 1770491570.737097}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[36]", "time": 1770491570.7371213}
+{"type": "start", "test": "test_shit.py::test_something[37]", "time": 1770491570.737673}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[37]", "time": 1770491570.7378588}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[37]", "time": 1770491572.739419}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[37]", "time": 1770491572.7396777}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[37]", "time": 1770491572.7397027}
+{"type": "start", "test": "test_shit.py::test_something[38]", "time": 1770491572.7399879}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[38]", "time": 1770491572.7403448}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[38]", "time": 1770491574.7410002}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[38]", "time": 1770491574.7414129}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[38]", "time": 1770491574.7414594}
+{"type": "start", "test": "test_shit.py::test_something[39]", "time": 1770491574.7417462}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[39]", "time": 1770491574.7418988}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[39]", "time": 1770491576.7444835}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[39]", "time": 1770491576.744643}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[39]", "time": 1770491576.7446623}
+{"type": "start", "test": "test_shit.py::test_something[40]", "time": 1770491576.744905}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[40]", "time": 1770491576.7450347}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[40]", "time": 1770491578.74666}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[40]", "time": 1770491578.7471023}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[40]", "time": 1770491578.7471294}
+{"type": "start", "test": "test_shit.py::test_something[41]", "time": 1770491578.7476475}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[41]", "time": 1770491578.7478652}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[41]", "time": 1770491580.748343}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[41]", "time": 1770491580.748522}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[41]", "time": 1770491580.7485452}
+{"type": "start", "test": "test_shit.py::test_something[42]", "time": 1770491580.7488346}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[42]", "time": 1770491580.748982}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[42]", "time": 1770491582.7494493}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[42]", "time": 1770491582.7496352}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[42]", "time": 1770491582.749658}
+{"type": "start", "test": "test_shit.py::test_something[43]", "time": 1770491582.7501307}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[43]", "time": 1770491582.7506392}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[43]", "time": 1770491584.751083}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[43]", "time": 1770491584.751481}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[43]", "time": 1770491584.7515266}
+{"type": "start", "test": "test_shit.py::test_something[44]", "time": 1770491584.7518466}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[44]", "time": 1770491584.7520123}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[44]", "time": 1770491586.7536879}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[44]", "time": 1770491586.7538688}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[44]", "time": 1770491586.7538903}
+{"type": "start", "test": "test_shit.py::test_something[45]", "time": 1770491586.7546253}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[45]", "time": 1770491586.754854}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[45]", "time": 1770491588.755621}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[45]", "time": 1770491588.7563102}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[45]", "time": 1770491588.7563403}
+{"type": "start", "test": "test_shit.py::test_something[46]", "time": 1770491588.7566814}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[46]", "time": 1770491588.756855}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[46]", "time": 1770491590.7576046}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[46]", "time": 1770491590.7577872}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[46]", "time": 1770491590.7578142}
+{"type": "start", "test": "test_shit.py::test_something[47]", "time": 1770491590.7581162}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[47]", "time": 1770491590.758605}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[47]", "time": 1770491592.7590454}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[47]", "time": 1770491592.7595482}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[47]", "time": 1770491592.7595997}
+{"type": "start", "test": "test_shit.py::test_something[48]", "time": 1770491592.7599027}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[48]", "time": 1770491592.76007}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[48]", "time": 1770491594.7607071}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[48]", "time": 1770491594.761465}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[48]", "time": 1770491594.7615018}
+{"type": "start", "test": "test_shit.py::test_something[49]", "time": 1770491594.761802}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[49]", "time": 1770491594.761961}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[49]", "time": 1770491596.7626915}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[49]", "time": 1770491596.7628994}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[49]", "time": 1770491596.7629225}
+{"type": "start", "test": "test_shit.py::test_something[50]", "time": 1770491596.7635245}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[50]", "time": 1770491596.7637355}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[50]", "time": 1770491598.76421}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[50]", "time": 1770491598.7643821}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[50]", "time": 1770491598.7644045}
+{"type": "start", "test": "test_shit.py::test_something[51]", "time": 1770491598.7646968}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[51]", "time": 1770491598.7648454}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[51]", "time": 1770491600.7658727}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[51]", "time": 1770491600.7666872}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[51]", "time": 1770491600.766731}
+{"type": "start", "test": "test_shit.py::test_something[52]", "time": 1770491600.7670953}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[52]", "time": 1770491600.7687688}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[52]", "time": 1770491602.769688}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[52]", "time": 1770491602.769895}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[52]", "time": 1770491602.7699175}
+{"type": "start", "test": "test_shit.py::test_something[53]", "time": 1770491602.7705061}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[53]", "time": 1770491602.7707095}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[53]", "time": 1770491604.7713182}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[53]", "time": 1770491604.7715223}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[53]", "time": 1770491604.7715552}
+{"type": "start", "test": "test_shit.py::test_something[54]", "time": 1770491604.7718651}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[54]", "time": 1770491604.7720203}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[54]", "time": 1770491606.7727654}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[54]", "time": 1770491606.772942}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[54]", "time": 1770491606.7729647}
+{"type": "start", "test": "test_shit.py::test_something[55]", "time": 1770491606.7734606}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[55]", "time": 1770491606.7736535}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[55]", "time": 1770491608.774102}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[55]", "time": 1770491608.7745564}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[55]", "time": 1770491608.774595}
+{"type": "start", "test": "test_shit.py::test_something[56]", "time": 1770491608.7748983}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[56]", "time": 1770491608.7750664}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[56]", "time": 1770491610.7755313}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[56]", "time": 1770491610.7760448}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[56]", "time": 1770491610.776071}
+{"type": "start", "test": "test_shit.py::test_something[57]", "time": 1770491610.7767243}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[57]", "time": 1770491610.7769368}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[57]", "time": 1770491612.7776809}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[57]", "time": 1770491612.7778597}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[57]", "time": 1770491612.7778823}
+{"type": "start", "test": "test_shit.py::test_something[58]", "time": 1770491612.7784624}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[58]", "time": 1770491612.7786875}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[58]", "time": 1770491614.7791095}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[58]", "time": 1770491614.7794778}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[58]", "time": 1770491614.7795088}
+{"type": "start", "test": "test_shit.py::test_something[59]", "time": 1770491614.7798047}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[59]", "time": 1770491614.7799737}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[59]", "time": 1770491616.780517}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[59]", "time": 1770491616.7806919}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[59]", "time": 1770491616.7807138}
+{"type": "start", "test": "test_shit.py::test_something[60]", "time": 1770491616.7810667}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[60]", "time": 1770491616.7815661}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[60]", "time": 1770491618.7819865}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[60]", "time": 1770491618.7825432}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[60]", "time": 1770491618.7825768}
+{"type": "start", "test": "test_shit.py::test_something[61]", "time": 1770491618.7828767}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[61]", "time": 1770491618.7830386}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[61]", "time": 1770491620.7837927}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[61]", "time": 1770491620.7844508}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[61]", "time": 1770491620.7844856}
+{"type": "start", "test": "test_shit.py::test_something[62]", "time": 1770491620.7848175}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[62]", "time": 1770491620.7849905}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[62]", "time": 1770491622.785499}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[62]", "time": 1770491622.7856557}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[62]", "time": 1770491622.7856784}
+{"type": "start", "test": "test_shit.py::test_something[63]", "time": 1770491622.785933}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[63]", "time": 1770491622.7860656}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[63]", "time": 1770491624.7866879}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[63]", "time": 1770491624.7868526}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[63]", "time": 1770491624.7868743}
+{"type": "start", "test": "test_shit.py::test_something[64]", "time": 1770491624.7874677}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[64]", "time": 1770491624.7877502}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[64]", "time": 1770491626.7885234}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[64]", "time": 1770491626.7887301}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[64]", "time": 1770491626.7887537}
+{"type": "start", "test": "test_shit.py::test_something[65]", "time": 1770491626.7890406}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[65]", "time": 1770491626.7896366}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[65]", "time": 1770491628.7901201}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[65]", "time": 1770491628.7905996}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[65]", "time": 1770491628.7906249}
+{"type": "start", "test": "test_shit.py::test_something[66]", "time": 1770491628.7908907}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[66]", "time": 1770491628.7910411}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[66]", "time": 1770491630.7915494}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[66]", "time": 1770491630.7917378}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[66]", "time": 1770491630.7917612}
+{"type": "start", "test": "test_shit.py::test_something[67]", "time": 1770491630.792122}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[67]", "time": 1770491630.7924619}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[67]", "time": 1770491632.795925}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[67]", "time": 1770491632.7966692}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[67]", "time": 1770491632.7967396}
+{"type": "start", "test": "test_shit.py::test_something[68]", "time": 1770491632.7996843}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[68]", "time": 1770491632.8005986}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[68]", "time": 1770491634.8028984}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[68]", "time": 1770491634.803085}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[68]", "time": 1770491634.8031101}
+{"type": "start", "test": "test_shit.py::test_something[69]", "time": 1770491634.803545}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[69]", "time": 1770491634.8037379}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[69]", "time": 1770491636.80851}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[69]", "time": 1770491636.808828}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[69]", "time": 1770491636.8088617}
+{"type": "start", "test": "test_shit.py::test_something[70]", "time": 1770491636.8094172}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[70]", "time": 1770491636.8096666}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[70]", "time": 1770491638.817908}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[70]", "time": 1770491638.8191073}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[70]", "time": 1770491638.8195188}
+{"type": "start", "test": "test_shit.py::test_something[71]", "time": 1770491638.8206398}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[71]", "time": 1770491638.8212745}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[71]", "time": 1770491640.8230424}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[71]", "time": 1770491640.8236}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[71]", "time": 1770491640.8236432}
+{"type": "start", "test": "test_shit.py::test_something[72]", "time": 1770491640.8243327}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[72]", "time": 1770491640.824621}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[72]", "time": 1770491642.8277454}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[72]", "time": 1770491642.8290935}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[72]", "time": 1770491642.8295925}
+{"type": "start", "test": "test_shit.py::test_something[73]", "time": 1770491642.8306146}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[73]", "time": 1770491642.8311183}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[73]", "time": 1770491644.8318121}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[73]", "time": 1770491644.832013}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[73]", "time": 1770491644.8320396}
+{"type": "start", "test": "test_shit.py::test_something[74]", "time": 1770491644.8325322}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[74]", "time": 1770491644.8328118}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[74]", "time": 1770491646.8355055}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[74]", "time": 1770491646.8366654}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[74]", "time": 1770491646.8367221}
+{"type": "start", "test": "test_shit.py::test_something[75]", "time": 1770491646.8375328}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[75]", "time": 1770491646.837891}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[75]", "time": 1770491648.8447938}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[75]", "time": 1770491648.8471217}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[75]", "time": 1770491648.8475387}
+{"type": "start", "test": "test_shit.py::test_something[76]", "time": 1770491648.848917}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[76]", "time": 1770491648.8498743}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[76]", "time": 1770491650.8509524}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[76]", "time": 1770491650.851603}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[76]", "time": 1770491650.851699}
+{"type": "start", "test": "test_shit.py::test_something[77]", "time": 1770491650.8524444}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[77]", "time": 1770491650.852772}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[77]", "time": 1770491652.8558507}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[77]", "time": 1770491652.8568435}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[77]", "time": 1770491652.85695}
+{"type": "start", "test": "test_shit.py::test_something[78]", "time": 1770491652.8584514}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[78]", "time": 1770491652.8591187}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[78]", "time": 1770491654.8614068}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[78]", "time": 1770491654.861567}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[78]", "time": 1770491654.86159}
+{"type": "start", "test": "test_shit.py::test_something[79]", "time": 1770491654.8618531}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[79]", "time": 1770491654.8620021}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[79]", "time": 1770491656.8654704}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[79]", "time": 1770491656.8659165}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[79]", "time": 1770491656.865971}
+{"type": "start", "test": "test_shit.py::test_something[80]", "time": 1770491656.8669376}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[80]", "time": 1770491656.867517}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[80]", "time": 1770491658.869713}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[80]", "time": 1770491658.8707922}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[80]", "time": 1770491658.8709369}
+{"type": "start", "test": "test_shit.py::test_something[81]", "time": 1770491658.8731024}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[81]", "time": 1770491658.8740413}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[81]", "time": 1770491660.878025}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[81]", "time": 1770491660.8785706}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[81]", "time": 1770491660.8786223}
+{"type": "start", "test": "test_shit.py::test_something[82]", "time": 1770491660.8794837}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[82]", "time": 1770491660.8798301}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[82]", "time": 1770491662.885108}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[82]", "time": 1770491662.8859737}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[82]", "time": 1770491662.886028}
+{"type": "start", "test": "test_shit.py::test_something[83]", "time": 1770491662.8872232}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[83]", "time": 1770491662.8876781}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[83]", "time": 1770491664.8933256}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[83]", "time": 1770491664.8938596}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[83]", "time": 1770491664.8939252}
+{"type": "start", "test": "test_shit.py::test_something[84]", "time": 1770491664.894909}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[84]", "time": 1770491664.8953848}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[84]", "time": 1770491666.898782}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[84]", "time": 1770491666.900714}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[84]", "time": 1770491666.9008489}
+{"type": "start", "test": "test_shit.py::test_something[85]", "time": 1770491666.901716}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[85]", "time": 1770491666.9020796}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[85]", "time": 1770491668.9073453}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[85]", "time": 1770491668.9084275}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[85]", "time": 1770491668.908549}
+{"type": "start", "test": "test_shit.py::test_something[86]", "time": 1770491668.9094863}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[86]", "time": 1770491668.9099672}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[86]", "time": 1770491670.912597}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[86]", "time": 1770491670.9128819}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[86]", "time": 1770491670.9129198}
+{"type": "start", "test": "test_shit.py::test_something[87]", "time": 1770491670.913493}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[87]", "time": 1770491670.9137778}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[87]", "time": 1770491672.9154172}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[87]", "time": 1770491672.9174285}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[87]", "time": 1770491672.917505}
+{"type": "start", "test": "test_shit.py::test_something[88]", "time": 1770491672.9182718}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[88]", "time": 1770491672.9186633}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[88]", "time": 1770491674.9247918}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[88]", "time": 1770491674.9269667}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[88]", "time": 1770491674.9270983}
+{"type": "start", "test": "test_shit.py::test_something[89]", "time": 1770491674.9286666}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[89]", "time": 1770491674.9294097}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[89]", "time": 1770491676.9310198}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[89]", "time": 1770491676.9315352}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[89]", "time": 1770491676.9315858}
+{"type": "start", "test": "test_shit.py::test_something[90]", "time": 1770491676.9323676}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[90]", "time": 1770491676.9327319}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[90]", "time": 1770491678.9392686}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[90]", "time": 1770491678.941101}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[90]", "time": 1770491678.9413855}
+{"type": "start", "test": "test_shit.py::test_something[91]", "time": 1770491678.943307}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[91]", "time": 1770491678.9442427}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[91]", "time": 1770491680.9482446}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[91]", "time": 1770491680.9490545}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[91]", "time": 1770491680.949217}
+{"type": "start", "test": "test_shit.py::test_something[92]", "time": 1770491680.950652}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[92]", "time": 1770491680.9514716}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[92]", "time": 1770491682.9551308}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[92]", "time": 1770491682.9558015}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[92]", "time": 1770491682.9558647}
+{"type": "start", "test": "test_shit.py::test_something[93]", "time": 1770491682.9568214}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[93]", "time": 1770491682.9572399}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[93]", "time": 1770491684.961696}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[93]", "time": 1770491684.9621363}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[93]", "time": 1770491684.962246}
+{"type": "start", "test": "test_shit.py::test_something[94]", "time": 1770491684.9629545}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[94]", "time": 1770491684.963373}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[94]", "time": 1770491686.9662533}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[94]", "time": 1770491686.9676187}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[94]", "time": 1770491686.9677603}
+{"type": "start", "test": "test_shit.py::test_something[95]", "time": 1770491686.9698956}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[95]", "time": 1770491686.9706273}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[95]", "time": 1770491688.9729428}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[95]", "time": 1770491688.9739118}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[95]", "time": 1770491688.97399}
+{"type": "start", "test": "test_shit.py::test_something[96]", "time": 1770491688.9754872}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[96]", "time": 1770491688.976085}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[96]", "time": 1770491690.9794025}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[96]", "time": 1770491690.9797215}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[96]", "time": 1770491690.9797654}
+{"type": "start", "test": "test_shit.py::test_something[97]", "time": 1770491690.9803455}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[97]", "time": 1770491690.9807582}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[97]", "time": 1770491692.9833355}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[97]", "time": 1770491692.984096}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[97]", "time": 1770491692.984202}
+{"type": "start", "test": "test_shit.py::test_something[98]", "time": 1770491692.9851193}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[98]", "time": 1770491692.985599}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[98]", "time": 1770491694.9861243}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[98]", "time": 1770491694.986376}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[98]", "time": 1770491694.9864109}
+{"type": "start", "test": "test_shit.py::test_something[99]", "time": 1770491694.9867094}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_something[99]", "time": 1770491694.9868824}
+{"type": "call", "outcome": "passed", "test": "test_shit.py::test_something[99]", "time": 1770491696.989599}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_something[99]", "time": 1770491696.9898012}
+{"type": "finish", "outcome": "passed", "test": "test_shit.py::test_something[99]", "time": 1770491696.9898338}
+{"type": "start", "test": "test_shit.py::test_skipped", "time": 1770491696.990106}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_skipped", "time": 1770491696.9906094}
+{"type": "call", "outcome": "skipped", "test": "test_shit.py::test_skipped", "reason": "Skipped: wowza", "time": 1770491696.993803}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_skipped", "time": 1770491696.9940042}
+{"type": "finish", "outcome": "skipped", "test": "test_shit.py::test_skipped", "time": 1770491696.9940252}
+{"type": "start", "test": "test_shit.py::test_failed", "time": 1770491696.9945748}
+{"type": "setup", "outcome": "passed", "test": "test_shit.py::test_failed", "time": 1770491696.9946895}
+{"type": "call", "outcome": "failed", "test": "test_shit.py::test_failed", "exception": "def test_failed():\n>       assert False\nE       assert False\n\ntest_shit.py:15: AssertionError", "time": 1770491696.9995666}
+{"type": "teardown", "outcome": "passed", "test": "test_shit.py::test_failed", "time": 1770491696.9997036}
+{"type": "finish", "outcome": "failed", "test": "test_shit.py::test_failed", "time": 1770491696.9997225}

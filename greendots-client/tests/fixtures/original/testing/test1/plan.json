@@ -1,0 +1,820 @@
+{
+    "groups": {
+        "test_shit": [
+            {
+                "id": "test_shit.py::test_something[0]",
+                "log_file": "test_shit.py::test_something[0].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 0
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[1]",
+                "log_file": "test_shit.py::test_something[1].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 1
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[2]",
+                "log_file": "test_shit.py::test_something[2].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 2
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[3]",
+                "log_file": "test_shit.py::test_something[3].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 3
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[4]",
+                "log_file": "test_shit.py::test_something[4].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 4
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[5]",
+                "log_file": "test_shit.py::test_something[5].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 5
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[6]",
+                "log_file": "test_shit.py::test_something[6].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 6
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[7]",
+                "log_file": "test_shit.py::test_something[7].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 7
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[8]",
+                "log_file": "test_shit.py::test_something[8].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 8
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[9]",
+                "log_file": "test_shit.py::test_something[9].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 9
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[10]",
+                "log_file": "test_shit.py::test_something[10].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 10
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[11]",
+                "log_file": "test_shit.py::test_something[11].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 11
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[12]",
+                "log_file": "test_shit.py::test_something[12].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 12
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[13]",
+                "log_file": "test_shit.py::test_something[13].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 13
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[14]",
+                "log_file": "test_shit.py::test_something[14].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 14
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[15]",
+                "log_file": "test_shit.py::test_something[15].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 15
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[16]",
+                "log_file": "test_shit.py::test_something[16].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 16
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[17]",
+                "log_file": "test_shit.py::test_something[17].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 17
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[18]",
+                "log_file": "test_shit.py::test_something[18].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 18
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[19]",
+                "log_file": "test_shit.py::test_something[19].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 19
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[20]",
+                "log_file": "test_shit.py::test_something[20].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 20
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[21]",
+                "log_file": "test_shit.py::test_something[21].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 21
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[22]",
+                "log_file": "test_shit.py::test_something[22].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 22
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[23]",
+                "log_file": "test_shit.py::test_something[23].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 23
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[24]",
+                "log_file": "test_shit.py::test_something[24].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 24
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[25]",
+                "log_file": "test_shit.py::test_something[25].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 25
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[26]",
+                "log_file": "test_shit.py::test_something[26].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 26
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[27]",
+                "log_file": "test_shit.py::test_something[27].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 27
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[28]",
+                "log_file": "test_shit.py::test_something[28].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 28
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[29]",
+                "log_file": "test_shit.py::test_something[29].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 29
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[30]",
+                "log_file": "test_shit.py::test_something[30].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 30
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[31]",
+                "log_file": "test_shit.py::test_something[31].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 31
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[32]",
+                "log_file": "test_shit.py::test_something[32].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 32
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[33]",
+                "log_file": "test_shit.py::test_something[33].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 33
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[34]",
+                "log_file": "test_shit.py::test_something[34].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 34
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[35]",
+                "log_file": "test_shit.py::test_something[35].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 35
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[36]",
+                "log_file": "test_shit.py::test_something[36].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 36
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[37]",
+                "log_file": "test_shit.py::test_something[37].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 37
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[38]",
+                "log_file": "test_shit.py::test_something[38].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 38
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[39]",
+                "log_file": "test_shit.py::test_something[39].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 39
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[40]",
+                "log_file": "test_shit.py::test_something[40].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 40
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[41]",
+                "log_file": "test_shit.py::test_something[41].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 41
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[42]",
+                "log_file": "test_shit.py::test_something[42].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 42
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[43]",
+                "log_file": "test_shit.py::test_something[43].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 43
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[44]",
+                "log_file": "test_shit.py::test_something[44].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 44
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[45]",
+                "log_file": "test_shit.py::test_something[45].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 45
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[46]",
+                "log_file": "test_shit.py::test_something[46].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 46
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[47]",
+                "log_file": "test_shit.py::test_something[47].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 47
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[48]",
+                "log_file": "test_shit.py::test_something[48].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 48
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[49]",
+                "log_file": "test_shit.py::test_something[49].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 49
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[50]",
+                "log_file": "test_shit.py::test_something[50].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 50
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[51]",
+                "log_file": "test_shit.py::test_something[51].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 51
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[52]",
+                "log_file": "test_shit.py::test_something[52].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 52
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[53]",
+                "log_file": "test_shit.py::test_something[53].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 53
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[54]",
+                "log_file": "test_shit.py::test_something[54].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 54
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[55]",
+                "log_file": "test_shit.py::test_something[55].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 55
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[56]",
+                "log_file": "test_shit.py::test_something[56].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 56
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[57]",
+                "log_file": "test_shit.py::test_something[57].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 57
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[58]",
+                "log_file": "test_shit.py::test_something[58].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 58
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[59]",
+                "log_file": "test_shit.py::test_something[59].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 59
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[60]",
+                "log_file": "test_shit.py::test_something[60].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 60
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[61]",
+                "log_file": "test_shit.py::test_something[61].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 61
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[62]",
+                "log_file": "test_shit.py::test_something[62].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 62
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[63]",
+                "log_file": "test_shit.py::test_something[63].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 63
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[64]",
+                "log_file": "test_shit.py::test_something[64].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 64
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[65]",
+                "log_file": "test_shit.py::test_something[65].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 65
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[66]",
+                "log_file": "test_shit.py::test_something[66].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 66
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[67]",
+                "log_file": "test_shit.py::test_something[67].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 67
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[68]",
+                "log_file": "test_shit.py::test_something[68].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 68
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[69]",
+                "log_file": "test_shit.py::test_something[69].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 69
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[70]",
+                "log_file": "test_shit.py::test_something[70].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 70
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[71]",
+                "log_file": "test_shit.py::test_something[71].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 71
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[72]",
+                "log_file": "test_shit.py::test_something[72].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 72
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[73]",
+                "log_file": "test_shit.py::test_something[73].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 73
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[74]",
+                "log_file": "test_shit.py::test_something[74].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 74
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[75]",
+                "log_file": "test_shit.py::test_something[75].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 75
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[76]",
+                "log_file": "test_shit.py::test_something[76].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 76
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[77]",
+                "log_file": "test_shit.py::test_something[77].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 77
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[78]",
+                "log_file": "test_shit.py::test_something[78].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 78
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[79]",
+                "log_file": "test_shit.py::test_something[79].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 79
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[80]",
+                "log_file": "test_shit.py::test_something[80].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 80
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[81]",
+                "log_file": "test_shit.py::test_something[81].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 81
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[82]",
+                "log_file": "test_shit.py::test_something[82].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 82
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[83]",
+                "log_file": "test_shit.py::test_something[83].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 83
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[84]",
+                "log_file": "test_shit.py::test_something[84].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 84
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[85]",
+                "log_file": "test_shit.py::test_something[85].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 85
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[86]",
+                "log_file": "test_shit.py::test_something[86].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 86
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[87]",
+                "log_file": "test_shit.py::test_something[87].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 87
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[88]",
+                "log_file": "test_shit.py::test_something[88].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 88
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[89]",
+                "log_file": "test_shit.py::test_something[89].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 89
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[90]",
+                "log_file": "test_shit.py::test_something[90].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 90
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[91]",
+                "log_file": "test_shit.py::test_something[91].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 91
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[92]",
+                "log_file": "test_shit.py::test_something[92].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 92
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[93]",
+                "log_file": "test_shit.py::test_something[93].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 93
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[94]",
+                "log_file": "test_shit.py::test_something[94].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 94
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[95]",
+                "log_file": "test_shit.py::test_something[95].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 95
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[96]",
+                "log_file": "test_shit.py::test_something[96].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 96
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[97]",
+                "log_file": "test_shit.py::test_something[97].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 97
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[98]",
+                "log_file": "test_shit.py::test_something[98].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 98
+                }
+            },
+            {
+                "id": "test_shit.py::test_something[99]",
+                "log_file": "test_shit.py::test_something[99].log.jsonl",
+                "name": "test_something",
+                "params": {
+                    "asdf": 99
+                }
+            },
+            {
+                "id": "test_shit.py::test_skipped",
+                "log_file": "test_shit.py::test_skipped.log.jsonl",
+                "name": "test_skipped",
+                "params": {}
+            },
+            {
+                "id": "test_shit.py::test_failed",
+                "log_file": "test_shit.py::test_failed.log.jsonl",
+                "name": "test_failed",
+                "params": {}
+            }
+        ]
+    },
+    "row_params": [],
+    "worker_count": 1
+}

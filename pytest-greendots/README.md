@@ -4,6 +4,6 @@ The pytest plugin of [GreenDots](../README.md): records each run's plan, a live 
 per-test logs, for the GreenDots web app to show as a live test matrix.
 
 ```bash
-pip install ./pytest-greendots
+pip install ./greendots ./pytest-greendots
 pytest --greendots=/var/opt/greendots/my-project/$(date +%Y-%m-%d_%H-%M-%S)
 ```

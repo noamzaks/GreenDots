@@ -1,18 +1,21 @@
 [project]
 name = "pytest-greendots"
-version = "0.2.0"
+version = "0.3.0"
 description = "Pytest plugin that records live test status and complete logs for the GreenDots test matrix viewer"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
-dependencies = ["pytest>=7"]
+dependencies = ["greendots>=0.3", "pytest>=7"]
 classifiers = ["Framework :: Pytest", "Programming Language :: Python :: 3"]
 
 [project.entry-points.pytest11]
-greendots = "greendots.plugin"
+greendots = "greendots.plugin.writer"
 
 [dependency-groups]
 dev = ["pytest-xdist>=3", "ruff>=0.6", "mypy>=1.11", "pyright>=1.1.380"]
+
+[tool.uv.sources]
+greendots = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
@@ -32,11 +35,13 @@ ignore = ["BLE001", "S110", "PYI034"]
 [tool.mypy]
 strict = true
 files = ["src", "tests"]
+mypy_path = "src"
+explicit_package_bases = true
 
 [tool.pyright]
 include = ["src", "tests"]
 pythonVersion = "3.9"
-venvPath = "."
+venvPath = ".."
 venv = ".venv"
 
 [tool.hatch.build.targets.wheel]

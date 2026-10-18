@@ -1,0 +1,42 @@
+[project]
+name = "greendots-client"
+version = "0.3.0"
+description = "Read GreenDots runs from Python: projects, runs, test results and logs, live"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+dependencies = ["greendots>=0.3", "tomli>=1.1; python_version < '3.11'"]
+classifiers = ["Programming Language :: Python :: 3", "Typing :: Typed"]
+
+[dependency-groups]
+dev = ["pytest>=7", "pytest-greendots", "ruff>=0.6", "mypy>=1.11", "pyright>=1.1.380", "tomli>=1.1"]
+
+[tool.uv.sources]
+greendots = { workspace = true }
+pytest-greendots = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p pytester"
+
+[tool.ruff]
+line-length = 110
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+mypy_path = "src"
+explicit_package_bases = true
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.9"
+venvPath = ".."
+venv = ".venv"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/greendots"]

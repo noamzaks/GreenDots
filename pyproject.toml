@@ -1,0 +1,3 @@
+# The Python packages, developed together: run uv in any of them.
+[tool.uv.workspace]
+members = ["greendots", "greendots-client", "pytest-greendots"]
