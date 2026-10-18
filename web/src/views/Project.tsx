@@ -21,7 +21,6 @@ export default function ProjectPage() {
   useDocumentTitle(`${data?.title ?? project} · GreenDots`)
   useTitle(pages.project(project), data?.title)
   if (!data) return error ? <Text c="red">{error}</Text> : <Loader />
-  const sources = new Set(data.runs.map((run) => run.source)).size > 1
   return (
     <Stack maw={1400} mx="auto" gap="md">
       <Group gap="sm">
@@ -63,11 +62,9 @@ export default function ProjectPage() {
                     >
                       {title ?? name}
                     </Anchor>
-                    {sources && (
-                      <Badge size="xs" variant="default">
-                        {source}
-                      </Badge>
-                    )}
+                    <Badge size="xs" variant="default">
+                      {source}
+                    </Badge>
                   </Group>
                 </Table.Td>
                 <Table.Td>

@@ -11,7 +11,7 @@ import { pages, useStream } from "@/lib/client"
 import { ago } from "@/lib/time"
 import type { ProjectInfo, Projects } from "@/lib/types"
 
-function ProjectCard({ project, sources }: { project: ProjectInfo; sources: boolean }) {
+function ProjectCard({ project }: { project: ProjectInfo }) {
   return (
     <Card withBorder padding="md">
       <Group justify="space-between" wrap="nowrap" mb={project.runs.length ? "xs" : 0}>
@@ -33,11 +33,9 @@ function ProjectCard({ project, sources }: { project: ProjectInfo; sources: bool
                 >
                   {run.title ?? run.name}
                 </Anchor>
-                {sources && (
-                  <Badge size="xs" variant="default" style={{ flexShrink: 0 }}>
-                    {run.source}
-                  </Badge>
-                )}
+                <Badge size="xs" variant="default" style={{ flexShrink: 0 }}>
+                  {run.source}
+                </Badge>
               </Group>
               <Text size="xs" c="dimmed" hiddenFrom="xs">
                 {ago(run.summary?.started ?? run.mtime / 1000)}
@@ -82,7 +80,6 @@ export default function Home() {
       projects: projects.filter((project) => !pins.includes(project.name)),
     },
   ].filter((section) => section.projects.length)
-  const sources = new Set(data?.projects.flatMap((project) => project.runs.map((run) => run.source))).size > 1
   return (
     <Stack maw={1400} mx="auto" gap="lg">
       <Group justify="space-between">
@@ -124,7 +121,7 @@ export default function Home() {
           )}
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
             {section.projects.map((project) => (
-              <ProjectCard key={project.name} project={project} sources={sources} />
+              <ProjectCard key={project.name} project={project} />
             ))}
           </SimpleGrid>
         </Stack>
