@@ -193,6 +193,7 @@ describe("Store", () => {
     store.setSynced("q", true)
     store.setSynced("p", false)
     expect(saved).toMatchObject({ synced: ["q"] })
+    expect(Object.keys(saved?.syncedSince ?? {})).toEqual(["q"]) // when it was synced: older runs aren't
   })
 
   test("polls a run while it changes, more slowly once it doesn't, and stops after a while", async () => {
@@ -229,9 +230,10 @@ describe("Store", () => {
   })
 
   test("tick syncs synced projects' latest runs and nothing else", async () => {
+    const store = makeStore({ synced: ["synced"], polling: { run: 0.001, list: 0.001 } })
+    await sleep(20) // past the filesystem's coarse clock: a run made after the project was synced
     const synced = makeRun("local", "synced", "r")
     makeRun("local", "other", "r")
-    const store = makeStore({ synced: ["synced"], polling: { run: 0.001 } })
     const tick = async () => {
       await sleep(5)
       store.tick()
@@ -245,9 +247,40 @@ describe("Store", () => {
     expect(store.runInfos("synced", 1, false).runs[0].summary?.running).toBe(1)
     finishAll(synced)
     await tick()
+    store.configure(Config.parse({ ...store.config, polling: { ...store.config.polling, list: 10 } }))
+    await tick()
     const ops = store.fs.ops
     await tick() // listings are cached, the finished run isn't read again, "other" is never read
     expect(store.fs.ops).toBe(ops)
+  })
+
+  test("syncing a project syncs its new runs, not the ones it already had", async () => {
+    const old = makeRun("local", "p", "old")
+    utimesSync(old, 1, 1) // made long before the project was synced
+    let saved: Config | undefined
+    const store = makeStore({ synced: ["p"], polling: { run: 0.001, list: 0.001, browse: 0.05 } }, (config) => {
+      saved = config
+    })
+    expect(saved?.syncedSince.p).toBeGreaterThan(0) // projects synced before this was recorded: from now on
+    const tick = async () => {
+      await sleep(5)
+      store.tick()
+      store.projects() // the home page, which summarizes synced projects' latest runs
+      await store.settled()
+    }
+    await tick()
+    await tick()
+    const touched = () => store.activity.since(0).filter((entry) => entry.path?.includes(`${join("p", "old")}/`))
+    expect(touched()).toEqual([]) // not even its plan: it's read when someone opens it
+    expect(store.runInfos("p", 0, false).runs.find((run) => run.name === "old")?.summary).toBeUndefined()
+    await sleep(20) // past the filesystem's coarse clock
+    const fresh = makeRun("local", "p", "new")
+    append(fresh, 0, line({ type: "start", test: ids[0] }))
+    await sleep(60) // its listing is refreshed within polling.browse
+    await tick()
+    await tick()
+    expect(store.runInfos("p", 0, false).runs.find((run) => run.name === "new")?.summary?.running).toBe(1)
+    expect(touched()).toEqual([])
   })
 })
 

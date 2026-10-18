@@ -65,7 +65,8 @@ Open <http://localhost:3000>, go to **Settings** and add your sources (e.g. `loc
 `network` → `/media/greendots`). Projects with the same name in several sources are shown together.
 
 On the home page, **pin** (📌) the projects you care about to the top (pins are kept in your browser), and **sync**
-(↻) the ones whose latest runs you want kept up to date even while you're not looking.
+(↻) the ones whose new runs you want kept up to date even while you're not looking. Syncing doesn't read the runs a
+project already had: they're read when you open them.
 
 ### Or install the Fedora package
 
@@ -284,6 +285,8 @@ The Activity page shows every filesystem operation. The rules:
 
 - **Nothing is read for pages nobody looks at.** Browsers get updates over one event stream per tab, closed while the
   tab is hidden (unless its notifications are on); only open streams and synced projects make the server read.
+- **Syncing reads only new runs**: the `polling.recentRuns` latest runs made since the project was synced (when is
+  kept in the config's `syncedSince`), so syncing, or starting with synced projects, reads none of their old runs.
 - **Listings come from a cache** and are refreshed in the background: every `polling.list` seconds for projects
   being viewed or with runs in progress, every `polling.browse` for the rest. Each run directory is `stat`-ed once.
 - **A run's `plan.json` is read once.** Status files are tailed by byte offset: one `stat` per worker per check,

@@ -39,6 +39,16 @@ export class Store {
     this.fs = nodeFs({ ...fs, activity: this.activity })
     this.logs = new LogReader(this.fs)
     this.configure(config)
+    // projects synced before the time was recorded: from now on, so starting up reads none of their old runs
+    const unrecorded = config.synced.filter((project) => config.syncedSince[project] === undefined)
+    if (unrecorded.length)
+      this.update((config) => ({
+        ...config,
+        syncedSince: {
+          ...config.syncedSince,
+          ...Object.fromEntries(unrecorded.map((project) => [project, Date.now()])),
+        },
+      }))
   }
 
   configure(config: Config) {
@@ -194,14 +204,15 @@ export class Store {
     return run.done ? "done" : idle > this.ms("stopAfter") ? "stopped" : idle > this.ms("slowAfter") ? "slow" : "live"
   }
 
-  /** A project's runs, with summaries of the first `count` (which get loaded). */
-  runInfos = (project: string, count: number, touch: boolean): { runs: RunInfo[]; loading: boolean } => {
+  /** A project's runs, with summaries of the first `count` made `since` then (which get loaded). */
+  runInfos = (project: string, count: number, touch: boolean, since = 0): { runs: RunInfo[]; loading: boolean } => {
     const { runs, loading } = this.listRuns(project)
     return {
       loading,
       runs: runs.map((info, index) => {
         const key = `${info.source}/${project}/${info.name}`
-        const run = index < count ? this.run(project, info.source, info.name, touch) : this.runs.get(key)
+        const load = index < count && info.mtime >= since
+        const run = load ? this.run(project, info.source, info.name, touch) : this.runs.get(key)
         return { ...info, title: run?.title, summary: run?.plan && run.summary(), polling: run && this.polling(run) }
       }),
     }
@@ -220,7 +231,7 @@ export class Store {
     }
     const projects = [...names].map((name): ProjectInfo => {
       const synced = this.config.synced.includes(name)
-      const { runs } = this.runInfos(name, synced ? this.config.polling.recentRuns : 0, false)
+      const { runs } = this.runInfos(name, synced ? this.config.polling.recentRuns : 0, false, this.syncedSince(name))
       const shown = Math.max(this.config.polling.recentRuns, 3)
       return {
         name,
@@ -234,10 +245,19 @@ export class Store {
 
   setSynced(project: string, synced: boolean) {
     if (!isName(project)) return
-    this.update((config) => ({
-      ...config,
-      synced: synced ? [...new Set([...config.synced, project])] : config.synced.filter((name) => name !== project),
-    }))
+    this.update((config) => {
+      const { [project]: _, ...since } = config.syncedSince
+      return {
+        ...config,
+        synced: synced ? [...new Set([...config.synced, project])] : config.synced.filter((name) => name !== project),
+        syncedSince: synced ? { ...since, [project]: config.syncedSince[project] ?? Date.now() } : since,
+      }
+    })
+  }
+
+  /** Since when a synced project's runs are kept up to date: the ones it had before are read only when opened. */
+  private syncedSince(project: string) {
+    return this.config.syncedSince[project] ?? Date.now()
   }
 
   /** The path of a test's log, or of a worker's session log (output outside of tests). */
@@ -269,7 +289,10 @@ export class Store {
       if (!project || !(this.viewed(project) || this.config.synced.includes(project))) continue
       const { runs } = this.listRuns(project)
       if (!this.config.synced.includes(project)) continue
-      for (const { source, name } of runs.slice(0, this.config.polling.recentRuns)) {
+      const since = this.syncedSince(project)
+      for (const { source, name } of runs
+        .filter((run) => run.mtime >= since)
+        .slice(0, this.config.polling.recentRuns)) {
         const run = this.run(project, source, name, false)
         if (run) synced.add(run)
       }

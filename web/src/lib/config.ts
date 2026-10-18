@@ -10,6 +10,8 @@ export const Config = z.object({
     .default([]),
   /** Projects whose latest runs are kept up to date in the background. */
   synced: z.array(z.string()).default([]),
+  /** When each synced project was synced: its runs from then on are kept up to date, older ones are read when opened. */
+  syncedSince: z.record(z.string(), z.number()).default({}),
   server: z.object({ host: z.string().default("127.0.0.1"), port: z.number().int().default(3000) }).prefault({}),
   polling: z
     .object({
