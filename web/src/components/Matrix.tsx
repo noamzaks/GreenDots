@@ -344,8 +344,15 @@ export function Matrix(props: Props) {
                     c="dimmed"
                     truncate
                     px={6}
+                    mx="auto"
                     lh="20px"
-                    style={{ position: "sticky", left: cornerWidth + 12, width: "fit-content", maxWidth: "100%" }}
+                    style={{
+                      position: "sticky",
+                      left: cornerWidth + 12,
+                      right: 16,
+                      width: "fit-content",
+                      maxWidth: "100%",
+                    }}
                   >
                     {group.module}
                   </Text>
