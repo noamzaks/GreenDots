@@ -39,6 +39,7 @@ import {
   IconHelp,
   IconSearch,
 } from "@tabler/icons-react"
+import { type LiqeQuery, test as matches, parse } from "liqe"
 import { useMemo, useRef, useState } from "react"
 import { Link, useLocation } from "wouter"
 import { ErrorsDrawer } from "@/components/ErrorsDrawer"
@@ -49,7 +50,6 @@ import { useNotificationsSetting, useRunAlerts } from "@/lib/alerts"
 import { apis, COLORS, errorTitle, hash, pages, type RunRef, useRun } from "@/lib/client"
 import { plural } from "@/lib/format"
 import { buildGrids } from "@/lib/grid"
-import { compileKeywords, keywordsOf } from "@/lib/keyword"
 import { mod } from "@/lib/platform"
 import { useQueryParam, useRunRef } from "@/lib/router"
 import { ago, took } from "@/lib/time"
@@ -68,16 +68,11 @@ function RunView(ref: RunRef) {
   const [, navigate] = useLocation()
   const [notify, toggleNotify] = useNotificationsSetting()
   const { plan, tests, summary, title, polling, error } = useRun(ref, notify)
-  useDocumentTitle(
-    `${summary?.failed ? `✗${summary.failed} ` : ""}${title ?? run} (${source}) · ${project} · GreenDots`,
-  )
+  useDocumentTitle(`${title ?? run} (${source}) · ${project} · GreenDots`)
   useTitle(pages.run(ref), title)
   useRunAlerts(ref, summary, notify)
-  // the box takes pytest -k expressions; status and error group are filters of their own
   const [q, setQuery] = useQueryParam("q")
   const query = q ?? ""
-  const [statusParam, setStatusParam] = useQueryParam("status")
-  const [activeError, setActiveError] = useQueryParam("error")
   const [errorsParam, setErrorsParam] = useQueryParam("errors")
   const showErrors = errorsParam === "true"
   const setShowErrors = (show: boolean) => setErrorsParam(show ? "true" : null)
@@ -108,9 +103,9 @@ function RunView(ref: RunRef) {
   const [debouncedQuery] = useDebouncedValue(query, 200)
   const filter = useMemo(() => {
     try {
-      return { match: debouncedQuery.trim() ? compileKeywords(debouncedQuery.trim()) : undefined }
-    } catch (error) {
-      return { invalid: (error as Error).message }
+      return { parsed: debouncedQuery.trim() ? (parse(debouncedQuery) as LiqeQuery) : undefined }
+    } catch {
+      return { invalid: true }
     }
   }, [debouncedQuery])
 
@@ -134,28 +129,31 @@ function RunView(ref: RunRef) {
 
   // the layout only depends on test states while filtering
   const filtering = useMemo(
-    () =>
-      (filter.match || statusParam || activeError) && {
-        match: filter.match,
-        status: statusParam,
-        error: activeError,
-        tests,
-        errorOf,
-      },
-    [filter.match, statusParam, activeError, tests, errorOf],
+    () => filter.parsed && { parsed: filter.parsed, tests, errorOf, titles: new Map(errors) },
+    [filter.parsed, tests, errorOf, errors],
   )
   const grids = useMemo(() => {
     if (!plan || !filtering) return plan ? buildGrids(plan, undefined, columns) : []
-    const { match, status, error, tests, errorOf } = filtering
+    const { parsed, tests, errorOf, titles } = filtering
     return buildGrids(
       plan,
-      (test) =>
-        (!status || (tests.get(test.id)?.status ?? "pending") === status) &&
-        (!error || errorOf.get(test.id) === error) &&
-        (!match || match(keywordsOf(test))),
+      (test) => {
+        const state = tests.get(test.id)
+        const error = errorOf.get(test.id)
+        const fields = { id: test.id, name: test.name, module: test.module, status: state?.status ?? "pending" }
+        // as pytest -k matches tests: the names of their nodes, markers and other keywords
+        const keywords = [
+          ...test.id.split("::")[0].split("/"),
+          ...test.id.split("::").slice(1),
+          ...(test.keywords ?? []),
+        ]
+        const message = error && titles.get(error)?.title
+        return matches(parsed, { ...test.params, ...fields, keywords, error, message, reason: state?.reason })
+      },
       columns,
     )
   }, [plan, filtering, columns])
+  const params = useMemo(() => [...new Set(plan?.tests.flatMap((test) => Object.keys(test.params)))], [plan])
   const canvasColors = useMemo(() => {
     // the canvas needs real colors, not CSS variables
     const style = getComputedStyle(document.documentElement)
@@ -173,8 +171,9 @@ function RunView(ref: RunRef) {
 
   const shown = grids.reduce((count, grid) => count + grid.cells.length, 0)
   const shownIds = grids.flatMap((grid) => grid.cells.map((cell) => JSON.stringify(cell.test.id))).join(" ")
+  const activeError = /(?:^|\s)error:(\w+)/.exec(query)?.[1]
   const activeTitle = activeError && errors.find(([key]) => key === activeError)?.[1].title
-  const toggleStatus = (status: Status) => setStatusParam(statusParam === status ? null : status)
+  const toggleStatus = (status: Status) => setQuery(query.trim() === `status:${status}` ? null : `status:${status}`)
   const subtitle = [
     summary?.started && `started ${ago(summary.started)}`,
     summary?.done && summary.ended && `took ${took(summary.started, summary.ended)}`,
@@ -274,7 +273,7 @@ function RunView(ref: RunRef) {
             leftSection={<IconSearch size={16} />}
             placeholder={mobile ? "Filter tests" : `Filter tests (${mod()} K), e.g. status:failed arch:arm`}
             value={query}
-            error={filter.invalid && `Invalid expression ${filter.invalid} - see the syntax help (?)`}
+            error={filter.invalid && "Invalid query - see the syntax help (?)"}
             onChange={(event) => setQuery(event.currentTarget.value || null)}
             rightSectionWidth={56}
             rightSection={
@@ -287,25 +286,20 @@ function RunView(ref: RunRef) {
                     </ActionIcon>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <FilterHelp tests={plan.tests} onPick={setQuery} />
+                    <FilterHelp params={params} onPick={setQuery} />
                   </Popover.Dropdown>
                 </Popover>
               </Group>
             }
           />
-          {filtering && (
+          {(filter.parsed || activeTitle) && (
             <Group gap="xs">
               <Text size="xs" c="dimmed">
                 Showing {shown.toLocaleString()} of {plan.tests.length.toLocaleString()} tests
               </Text>
-              {statusParam && (
-                <Pill withRemoveButton onRemove={() => setStatusParam(null)} size="sm">
-                  {statusParam}
-                </Pill>
-              )}
-              {activeError && (
-                <Pill withRemoveButton onRemove={() => setActiveError(null)} size="sm">
-                  {(activeTitle || "an error that's gone").slice(0, 80)}
+              {activeTitle && (
+                <Pill withRemoveButton onRemove={() => setQuery(null)} size="sm">
+                  {activeTitle.slice(0, 80)}
                 </Pill>
               )}
             </Group>
@@ -313,7 +307,7 @@ function RunView(ref: RunRef) {
         </Stack>
         <Group gap={6} mt={4}>
           {STATUSES.filter((status) => summary?.[status]).map((status) => {
-            const active = statusParam === status
+            const active = query.trim() === `status:${status}`
             return (
               <Tooltip
                 key={status}
@@ -420,7 +414,7 @@ function RunView(ref: RunRef) {
               colorErrors={showErrors}
               onOpen={(test, event) => {
                 const url = pages.log(ref, { test: test.id })
-                if (event.altKey) setStatusParam(tests.get(test.id)?.status ?? "pending")
+                if (event.altKey) setQuery(`status:${tests.get(test.id)?.status ?? "pending"}`)
                 else if (event.ctrlKey || event.metaKey) window.open(url)
                 else navigate(url)
               }}
@@ -436,11 +430,11 @@ function RunView(ref: RunRef) {
         errors={errors}
         colors={errorColors}
         collectErrors={plan.errors.length}
-        active={activeError ?? undefined}
+        active={activeError}
         highlight={highlight}
         onHighlight={setHighlight}
         onPick={(id) => {
-          setActiveError(id === activeError ? null : id)
+          setQuery(`error:${id}`)
           if (mobile) setShowErrors(false)
         }}
         onShowCollectErrors={() => setCollectErrorsHidden(false)}

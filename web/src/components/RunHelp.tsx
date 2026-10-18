@@ -1,6 +1,5 @@
 import { Code, Group, Kbd, List, Modal, Stack, Text, UnstyledButton } from "@mantine/core"
 import { mod } from "@/lib/platform"
-import type { PlanTest } from "@/lib/types"
 
 export function Shortcuts({ opened, onClose }: { opened: boolean; onClose: () => void }) {
   const rows: [string, React.ReactNode][] = [
@@ -33,43 +32,38 @@ export function Shortcuts({ opened, onClose }: { opened: boolean; onClose: () =>
   )
 }
 
-/** Example `-k` expressions made of the run's own names, e.g. `test_run and not ssh`. */
-function examples(tests: PlanTest[]) {
-  const functions = [...new Set(tests.map((test) => test.id.split("::").at(-1)?.split("[")[0] ?? ""))].filter(Boolean)
-  const ids = tests.map((test) => /\[(.+)\]$/.exec(test.id)?.[1]).filter((id): id is string => !!id)
-  const values = [...new Set(ids.flatMap((id) => id.split("-")))].filter((value) => /^[\w.]+$/.test(value))
-  const [a, b] = functions
-  const [x] = values
-  return [
-    a,
-    x && `${a} and not ${x}`,
-    b && `${a} or ${b}`,
-    b && x && `(${a} or ${b}) and ${x}`,
-    `not ${tests[0]?.id.split("::")[0].split("/").at(-1) ?? "slow"}`,
-  ].filter((example): example is string => !!example)
-}
-
-export function FilterHelp({ tests, onPick }: { tests: PlanTest[]; onPick: (query: string) => void }) {
+export function FilterHelp({ params, onPick }: { params: string[]; onPick: (query: string) => void }) {
+  const examples = [
+    "status:failed",
+    "status:failed AND module:network",
+    "name:/compile|link/",
+    "-status:passed",
+    ...params.slice(0, 1).map((param) => `${param}:x86`),
+  ]
   return (
     <Stack gap="xs" maw={380}>
       <Text size="sm">
-        Filter like{" "}
-        <a
-          href="https://docs.pytest.org/en/stable/how-to/usage.html#specifying-which-tests-to-run"
-          target="_blank"
-          rel="noreferrer"
-        >
-          pytest -k
-        </a>
-        : a word matches tests with it in their file, class or name (with params, e.g. <Code>x86</Code>), markers or
-        keywords, ignoring case. Combine words with <Code>and</Code>, <Code>or</Code>, <Code>not</Code> and parentheses.
+        Filter with{" "}
+        <a href="https://github.com/gajus/liqe#query-syntax" target="_blank" rel="noreferrer">
+          Liqe
+        </a>{" "}
+        queries: <Code>field:value</Code>, <Code>field:/regex/</Code>, <Code>AND</Code>, <Code>OR</Code>, and{" "}
+        <Code>-</Code> to exclude.
       </Text>
-      <Text size="sm">Click a status count or Alt-click a dot to show only tests with that status.</Text>
+      <Text size="sm">
+        Fields: <Code>status</Code> <Code>name</Code> <Code>module</Code> <Code>id</Code> <Code>message</Code>{" "}
+        <Code>error</Code> <Code>reason</Code> <Code>keywords</Code>
+        {params.map((param) => (
+          <Code key={param} ml={4}>
+            {param}
+          </Code>
+        ))}
+      </Text>
       <Text size="sm" fw={600}>
         Examples
       </Text>
       <List size="sm" spacing={2}>
-        {examples(tests).map((example) => (
+        {examples.map((example) => (
           <List.Item key={example}>
             <UnstyledButton onClick={() => onPick(example)}>
               <Code>{example}</Code>
