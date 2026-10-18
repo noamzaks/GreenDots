@@ -9,7 +9,7 @@
 %global __provides_exclude_from ^%{app}/
 
 Name:           greendots
-Version:        0.2.0
+Version:        0.3.0
 Release:        1.%{?commits}%{!?commits:0}%{?dist}
 Summary:        Live pytest matrix viewer
 License:        MIT
@@ -19,6 +19,7 @@ Source0:        greendots.tar.gz
 BuildRequires:  nodejs >= 22
 BuildRequires:  python3-devel
 BuildRequires:  pyproject-rpm-macros
+BuildRequires:  python3-pytest
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  firewalld-filesystem
 Requires:       nodejs >= 22
@@ -30,20 +31,40 @@ GreenDots shows pytest runs as a live test matrix: every test is a dot, rows and
 dots fill in while the run is going. This package runs the web app as the greendots service on port 7357, reading
 runs from /var/opt/greendots2.
 
+%package -n python3-greendots
+Summary:        The files GreenDots runs are made of: typed models and layout
+BuildArch:      noarch
+
+%description -n python3-greendots
+Typed models of a GreenDots run's plan, status streams and logs, and their layout, shared by the plugin and the
+client (greendots.core).
+
 %package -n python3-pytest-greendots
 Summary:        Pytest plugin that records live test status and complete logs for GreenDots
 BuildArch:      noarch
 
 %description -n python3-pytest-greendots
 Run pytest with --greendots=<dir> to write a run's plan, live status and complete per-test logs for the GreenDots
-viewer.
+viewer (greendots.plugin).
+
+%package -n python3-greendots-client
+Summary:        Read GreenDots runs from Python
+BuildArch:      noarch
+
+%description -n python3-greendots-client
+List a project's runs, get a test's result, read or follow its log, or wait for a run to finish
+(greendots.client).
 
 %prep
 %autosetup -c
 
 %generate_buildrequires
-cd pytest-greendots
-%pyproject_buildrequires
+# build tools only: the packages need each other, which these subpackages provide
+for package in greendots pytest-greendots greendots-client; do
+  cd $package
+  %pyproject_buildrequires -R
+  cd ..
+done
 
 %build
 cd web
@@ -51,8 +72,12 @@ bun install --frozen-lockfile
 NEXT_TELEMETRY_DISABLED=1 bun run build
 rm -rf node_modules .next/cache
 bun install --frozen-lockfile --production
-cd ../pytest-greendots
-%pyproject_wheel
+cd ..
+for package in greendots pytest-greendots greendots-client; do
+  cd $package
+  %pyproject_wheel
+  cd ..
+done
 
 %install
 install -d %{buildroot}%{app} %{buildroot}%{_bindir}
@@ -63,13 +88,10 @@ install -Dpm 644 packaging/fedora/greendots.service %{buildroot}%{_unitdir}/gree
 install -Dpm 644 packaging/fedora/greendots.sysusers %{buildroot}%{_sysusersdir}/greendots.conf
 install -Dpm 644 packaging/fedora/greendots.tmpfiles %{buildroot}%{_tmpfilesdir}/greendots.conf
 install -Dpm 644 packaging/fedora/firewalld.xml %{buildroot}%{_prefix}/lib/firewalld/services/greendots.xml
-cd pytest-greendots
 %pyproject_install
-%pyproject_save_files greendots
 
 %check
-cd pytest-greendots
-%pyproject_check_import
+%py3_check_import greendots.core greendots.plugin greendots.client
 
 %post
 %tmpfiles_create %{_tmpfilesdir}/greendots.conf
@@ -93,9 +115,25 @@ cd pytest-greendots
 %{_tmpfilesdir}/greendots.conf
 %{_prefix}/lib/firewalld/services/greendots.xml
 
-%files -n python3-pytest-greendots -f %{pyproject_files}
+%files -n python3-greendots
+%doc greendots/README.md
+%dir %{python3_sitelib}/greendots
+%{python3_sitelib}/greendots/core
+%{python3_sitelib}/greendots-%{version}.dist-info
+
+%files -n python3-pytest-greendots
 %doc pytest-greendots/README.md
+%{python3_sitelib}/greendots/plugin
+%{python3_sitelib}/pytest_greendots-%{version}.dist-info
+
+%files -n python3-greendots-client
+%doc greendots-client/README.md
+%{python3_sitelib}/greendots/client
+%{python3_sitelib}/greendots_client-%{version}.dist-info
 
 %changelog
+* Sun Oct 18 2026 Noam Zaks <imnoamzaks@gmail.com> - 0.3.0-1
+- Split the plugin's file models into python3-greendots, and add python3-greendots-client
+
 * Sat Oct 17 2026 Noam Zaks <imnoamzaks@gmail.com> - 0.2.0-1
 - Package the web app as a service, and the plugin
