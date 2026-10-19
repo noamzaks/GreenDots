@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "GREENDOTS_CONFIG=../example-data/greendots.json UV_THREADPOOL_SIZE=64 next dev -H 127.0.0.1",
-    "build": "next build",
+    "build": "next build && cp -r .next/static .next/standalone/.next/",
     "start": "node bin/greendots.mjs",
     "lint": "biome check",
     "format": "biome format --write",

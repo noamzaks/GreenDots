@@ -1,7 +1,7 @@
 # Build with packaging/fedora/build.sh: %%build downloads the web app's dependencies with bun.
 %global app %{_prefix}/lib/greendots
 
-# node_modules is shipped as is: no debuginfo, stripping, shebang mangling or dependency scanning
+# the server is shipped as built: no debuginfo, stripping, shebang mangling or dependency scanning
 %global debug_package %{nil}
 %global __strip /bin/true
 %global __brp_mangle_shebangs_exclude_from ^%{app}/
@@ -69,9 +69,7 @@ done
 %build
 cd web
 bun install --frozen-lockfile
-NEXT_TELEMETRY_DISABLED=1 bun run build
-rm -rf node_modules .next/cache
-bun install --frozen-lockfile --production
+NEXT_TELEMETRY_DISABLED=1 bun run build  # a standalone server: only the files it uses
 cd ..
 for package in greendots pytest-greendots greendots-client; do
   cd $package
@@ -81,7 +79,9 @@ done
 
 %install
 install -d %{buildroot}%{app} %{buildroot}%{_bindir}
-cp -a web/.next web/bin web/node_modules web/package.json web/next.config.ts %{buildroot}%{app}/
+cp -a web/bin web/package.json %{buildroot}%{app}/
+install -d %{buildroot}%{app}/.next
+cp -a web/.next/standalone %{buildroot}%{app}/.next/
 ln -s ../lib/greendots/bin/greendots.mjs %{buildroot}%{_bindir}/greendots
 install -Dpm 644 packaging/fedora/config.json %{buildroot}%{_sysconfdir}/greendots/config.json
 install -Dpm 644 packaging/fedora/greendots.service %{buildroot}%{_unitdir}/greendots.service
