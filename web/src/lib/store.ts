@@ -71,6 +71,7 @@ export class Store {
     }
     this.config = config
     this.fs.concurrency = config.filesystem.concurrency
+    this.fs.rate = config.filesystem.rate
     this.fs.timeout = config.filesystem.timeout * 1000
     this.fs.chunk = config.filesystem.chunk * 1024
     this.logs.window = config.logs.window * 1024
@@ -174,7 +175,9 @@ export class Store {
       names.map(async (name) => {
         const dir = join(path, project, name)
         if (!this.mtimes.has(dir)) {
-          this.mtimes.set(dir, (await this.fs.stat(dir))?.mtime ?? 0)
+          const mtime = (await this.fs.stat(dir))?.mtime
+          if (mtime === undefined) return { name, mtime: 0 } // unreadable for now: stat-ed again next time
+          this.mtimes.set(dir, mtime)
           this.saveMtimes()
         }
         return { name, mtime: this.mtimes.get(dir) ?? 0 }

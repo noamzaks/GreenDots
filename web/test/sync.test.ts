@@ -44,7 +44,9 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 function makeStore(config: Record<string, unknown> = {}, save?: (config: Config) => void) {
   const sources = ["local", "network"].map((name) => ({ name, path: join(root, name) }))
   for (const { path } of sources) mkdirSync(path, { recursive: true })
-  const store = new Store(Config.parse({ sources, cache: { dir: join(root, "cache") }, ...config }), save)
+  // no rate limit: these tests poll every millisecond (the rate limit has its own test)
+  const base = { sources, cache: { dir: join(root, "cache") }, filesystem: { rate: 0 } }
+  const store = new Store(Config.parse({ ...base, ...config }), save)
   stores.push(store)
   return store
 }
@@ -293,6 +295,18 @@ test("filesystem operations time out, but keep their slot until they really end"
   expect(activity.since(0)).toMatchObject([{ kind: "read", path: fifo, error: "ETIMEDOUT" }])
   await expect(fs.stat(root)).resolves.toBeUndefined() // queued behind the hung read: times out too
   openSync(fifo, "w") // let the hung read end
+})
+
+test("filesystem operations are limited per second, without timing out while they wait their turn", async () => {
+  const fs = nodeFs({ rate: 10, timeout: 100 })
+  const start = performance.now()
+  const stats = await Promise.all(Array.from({ length: 5 }, () => fs.stat(root)))
+  expect(stats.every(Boolean)).toBe(true) // the last one waited 400 ms for its turn, but its 100 ms timeout started then
+  expect(performance.now() - start).toBeGreaterThanOrEqual(390)
+  fs.rate = 0 // no limit
+  const quick = performance.now()
+  await Promise.all(Array.from({ length: 20 }, () => fs.stat(root)))
+  expect(performance.now() - quick).toBeLessThan(200)
 })
 
 test("the activity log keeps the latest entries", () => {

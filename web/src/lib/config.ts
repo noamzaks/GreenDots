@@ -32,8 +32,10 @@ export const Config = z.object({
     .prefault({}),
   filesystem: z
     .object({
-      /** Operations on the sources at a time. */
+      /** Operations on the sources at a time... */
       concurrency: z.number().int().min(1).default(8),
+      /** ... and a second, at most (0: no limit). */
+      rate: z.number().min(0).default(20),
       /** Operations taking longer fail (the share may be unreachable). */
       timeout: seconds(30),
       /** Files are read in pieces of at most this many KB, so a big one can't time out on a slow share. */

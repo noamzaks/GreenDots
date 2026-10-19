@@ -47,6 +47,13 @@ const FIELDS: Field[] = [
   { section: "polling", key: "browse", label: "List other projects and sources every", unit: "s" },
   { section: "polling", key: "recentRuns", label: "Latest runs kept up to date per synced project", unit: "" },
   { section: "filesystem", key: "concurrency", label: "Operations on the sources at a time", unit: "" },
+  {
+    section: "filesystem",
+    key: "rate",
+    label: "... and a second, at most",
+    unit: "",
+    help: "Stats, reads and listings of the sources (0: no limit)",
+  },
   { section: "filesystem", key: "timeout", label: "Give up on an operation after", unit: "s" },
   { section: "filesystem", key: "chunk", label: "Read files in pieces of", unit: "KB" },
   {

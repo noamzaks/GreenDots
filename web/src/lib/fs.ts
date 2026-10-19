@@ -12,17 +12,33 @@ export type Fs = {
   chunk: number
 }
 
-export type FsOptions = { concurrency?: number; timeout?: number; chunk?: number; activity?: ActivityLog }
+export type FsOptions = {
+  concurrency?: number
+  rate?: number
+  timeout?: number
+  chunk?: number
+  activity?: ActivityLog
+}
 
 /**
- * Node's fs, with at most `concurrency` operations at a time so a slow share isn't flooded, giving up on
- * operations after `timeout` ms (an unreachable share hangs them), and recording every one in `activity`.
- * A hung operation keeps its slot until it really ends, so they can't pile up.
+ * Node's fs, with at most `concurrency` operations at a time and `rate` a second (0: no limit) so a slow share
+ * isn't flooded, giving up on operations after `timeout` ms (an unreachable share hangs them), and recording
+ * every one in `activity`. A hung operation keeps its slot until it really ends, so they can't pile up.
  */
-export function nodeFs({ concurrency = 8, timeout = 30_000, chunk = 1 << 20, activity }: FsOptions = {}) {
+export function nodeFs({ concurrency = 8, rate = 0, timeout = 30_000, chunk = 1 << 20, activity }: FsOptions = {}) {
   const limit = pLimit(concurrency)
+  let next = 0 // when the next operation may start, to keep to `rate`
+  /** Waits for an operation's turn: they're spaced `1 / rate` seconds apart, in the order they come. */
+  const turn = () => {
+    if (!fs.rate) return Promise.resolve()
+    const now = performance.now()
+    const at = Math.max(now, next)
+    next = at + 1000 / fs.rate
+    return at > now ? new Promise<void>((resolve) => setTimeout(resolve, at - now)) : Promise.resolve()
+  }
   const fs = {
     ops: 0,
+    rate,
     set concurrency(value: number) {
       limit.concurrency = value
     },
@@ -64,7 +80,10 @@ export function nodeFs({ concurrency = 8, timeout = 30_000, chunk = 1 << 20, act
         }
       }),
   }
-  const run = <T>(kind: ActivityKind, path: string, op: () => Promise<T>): Promise<T> => {
+  // the timeout starts at an operation's turn: waiting for it isn't a sign of a hung share, unlike a full queue
+  const run = <T>(kind: ActivityKind, path: string, op: () => Promise<T>): Promise<T> =>
+    turn().then(() => attempt(kind, path, op))
+  const attempt = <T>(kind: ActivityKind, path: string, op: () => Promise<T>): Promise<T> => {
     const start = performance.now()
     const record = (extra: { bytes?: number; error?: string }) =>
       activity?.add({ kind, path, ms: performance.now() - start, ...extra })

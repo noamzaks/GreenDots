@@ -120,7 +120,7 @@ Every key is optional:
   "synced": ["my-project"],
   "server": { "host": "127.0.0.1", "port": 3000 },
   "polling": { "run": 1, "slowRun": 60, "slowAfter": 600, "stopAfter": 3600, "list": 10, "browse": 300, "recentRuns": 5 },
-  "filesystem": { "concurrency": 8, "timeout": 30, "chunk": 1024 },
+  "filesystem": { "concurrency": 8, "rate": 20, "timeout": 30, "chunk": 1024 },
   "logs": { "window": 256, "preview": 16 },
   "cache": { "dir": "", "size": 2048 },
   "prefetch": { "runs": 5, "interval": 2 },
@@ -308,6 +308,8 @@ The Activity page shows every filesystem operation. The rules:
   offers to check again.
 - **A followed log is `stat`-ed at most once per check**, however many tabs follow it, and not anymore once its test
   is over and it stopped growing. Logs are read in `logs.window` KB pieces.
+- **The share is never flooded**: at most `filesystem.rate` operations a second (`stat`s, reads and listings), and
+  `filesystem.concurrency` at a time.
 - **Slow or unreachable shares don't hang the app**: at most `filesystem.concurrency` operations run at a time,
   callers give up after `filesystem.timeout` seconds (per operation: files are read in `filesystem.chunk` KB
   pieces, so big plans, status files and logs load however slow the share is), pages show what's known while the
