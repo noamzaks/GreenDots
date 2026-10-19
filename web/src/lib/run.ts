@@ -67,6 +67,8 @@ export class Run {
     readonly dir: string,
     readonly project = "",
     readonly source = "",
+    /** Called once the plan's mtime is known, before the plan is read (e.g. to read it from a cache). */
+    private prepare?: (run: Run) => Promise<void>,
   ) {}
 
   /** When the run last showed signs of life: new status lines, or its files' modification times. */
@@ -76,6 +78,11 @@ export class Run {
 
   get done() {
     return !!this.plan && (this.workers.every((w) => w.finished) || this.tests.values().every(isDone))
+  }
+
+  /** Done, and nothing more will be written: its workers finished, or it's been quiet for `quiet` ms. */
+  settled(quiet: number) {
+    return this.done && (this.workers.every((w) => w.finished) || Date.now() - this.active > quiet)
   }
 
   /** Syncs with the files; resolves to whether anything changed. */
@@ -97,6 +104,7 @@ export class Run {
     if (!this.plan) {
       this.planMtime = (await this.fs.stat(join(this.dir, "plan.json")))?.mtime
       if (this.planMtime === undefined) return
+      await this.prepare?.(this)
       const text = await this.fs.readText(join(this.dir, "plan.json"))
       try {
         this.plan = normalizePlan(JSON.parse(text ?? ""))

@@ -25,7 +25,7 @@ type Saved = { config: Config; path: string }
 
 /** A numeric setting: `section.key`, with a label, unit and help text. */
 type Field = {
-  section: "polling" | "filesystem" | "logs" | "server"
+  section: "polling" | "filesystem" | "logs" | "server" | "cache" | "prefetch"
   key: string
   label: string
   unit: string
@@ -49,6 +49,21 @@ const FIELDS: Field[] = [
   { section: "filesystem", key: "concurrency", label: "Operations on the sources at a time", unit: "" },
   { section: "filesystem", key: "timeout", label: "Give up on an operation after", unit: "s" },
   { section: "filesystem", key: "chunk", label: "Read files in pieces of", unit: "KB" },
+  {
+    section: "prefetch",
+    key: "runs",
+    label: "Summarize a viewed project's newest runs before they're opened",
+    unit: "",
+    help: "Those that aren't cached yet",
+  },
+  { section: "prefetch", key: "interval", label: "... one every", unit: "s" },
+  {
+    section: "cache",
+    key: "size",
+    label: "Keep finished runs' files on disk, up to",
+    unit: "MB",
+    help: "So the share is read once for them; the runs used least recently go first",
+  },
   { section: "logs", key: "window", label: "Read logs in pieces of", unit: "KB" },
   { section: "logs", key: "preview", label: "Show long lines up to", unit: "KB", help: "The rest opens in a viewer" },
   { section: "server", key: "port", label: "Port", unit: "", help: "Takes effect when the server restarts" },
@@ -131,7 +146,7 @@ export default function SettingsPage() {
           </Button>
         </Stack>
       </Fieldset>
-      <Fieldset legend="Polling, filesystem and logs">
+      <Fieldset legend="Polling, filesystem, cache and logs">
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           {FIELDS.map(({ section, key, label, unit, help }) => (
             <NumberInput
@@ -161,6 +176,17 @@ export default function SettingsPage() {
             onChange={(event) =>
               change((c) => {
                 c.server.host = event.currentTarget.value
+              })
+            }
+          />
+          <TextInput
+            label="Cache directory"
+            description="Where finished runs' files and summaries are kept"
+            placeholder="~/.cache/greendots"
+            value={config.cache.dir}
+            onChange={(event) =>
+              change((c) => {
+                c.cache.dir = event.currentTarget.value
               })
             }
           />

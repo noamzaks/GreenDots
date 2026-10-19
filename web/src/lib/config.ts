@@ -40,6 +40,22 @@ export const Config = z.object({
       chunk: z.number().int().min(64).default(1024),
     })
     .prefault({}),
+  cache: z
+    .object({
+      /** Where finished runs' files and summaries are kept, so the share is read once for them ("": ~/.cache/greendots). */
+      dir: z.string().default(""),
+      /** At most this many MB: the runs used least recently go first. */
+      size: z.number().int().min(16).default(2048),
+    })
+    .prefault({}),
+  prefetch: z
+    .object({
+      /** How many of a viewed project's newest runs are summarized before they're opened (if not cached)... */
+      runs: z.number().int().min(0).default(5),
+      /** ... one every this many seconds. */
+      interval: seconds(2),
+    })
+    .prefault({}),
   logs: z
     .object({
       /** How much of a log is read at a time, in KB. */

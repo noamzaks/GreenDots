@@ -122,11 +122,13 @@ Every key is optional:
   "polling": { "run": 1, "slowRun": 60, "slowAfter": 600, "stopAfter": 3600, "list": 10, "browse": 300, "recentRuns": 5 },
   "filesystem": { "concurrency": 8, "timeout": 30, "chunk": 1024 },
   "logs": { "window": 256, "preview": 16 },
+  "cache": { "dir": "", "size": 2048 },
+  "prefetch": { "runs": 5, "interval": 2 },
   "activity": 5000
 }
 ```
 
-Times are in seconds and sizes in KB. The server listens on localhost only; set `server.host` to `0.0.0.0` to share
+Times are in seconds and sizes in KB (the cache's in MB). The server listens on localhost only; set `server.host` to `0.0.0.0` to share
 it (it takes effect on restart).
 
 ## Using the UI
@@ -288,7 +290,16 @@ The Activity page shows every filesystem operation. The rules:
 - **Syncing reads only new runs**: the `polling.recentRuns` latest runs made since the project was synced (when is
   kept in the config's `syncedSince`), so syncing, or starting with synced projects, reads none of their old runs.
 - **Listings come from a cache** and are refreshed in the background: every `polling.list` seconds for projects
-  being viewed or with runs in progress, every `polling.browse` for the rest. Each run directory is `stat`-ed once.
+  being viewed or with runs in progress, every `polling.browse` for the rest. Each run directory is `stat`-ed once,
+  ever: its mtime is kept in the disk cache.
+- **Finished runs are read from the share once.** Their files (plan, status files and logs, in `filesystem.chunk`
+  pieces, as they're read) and summary are kept on disk, in `cache.dir` (default: `~/.cache/greendots`), up to
+  `cache.size` MB, the runs used least recently going first. A finished run's files only change if it's rerun into the
+  same directory, which rewrites its plan: opening it checks the plan's mtime, nothing else, and lists show its
+  cached summary without reading anything.
+- **Project pages prefetch gently**: of the runs not cached yet, only the newest `prefetch.runs` are summarized before
+  they're opened, one run every `prefetch.interval` seconds, and only while the page is open. A finished run's
+  summary is all that's kept of it, so browsing doesn't fill the memory.
 - **A run's `plan.json` is read once.** Status files are tailed by byte offset: one `stat` per worker per check,
   and a read of only the new bytes when a file grew. Workers that finished are never read again, nor are finished
   runs.
@@ -299,8 +310,8 @@ The Activity page shows every filesystem operation. The rules:
   is over and it stopped growing. Logs are read in `logs.window` KB pieces.
 - **Slow or unreachable shares don't hang the app**: at most `filesystem.concurrency` operations run at a time,
   callers give up after `filesystem.timeout` seconds (per operation: files are read in `filesystem.chunk` KB
-  pieces, so big plans, status files and logs load however slow the share is), pages show what's known while the rest loads, and one bad
-  source doesn't hide the others. `bun run start` also enlarges Node's I/O thread pool, so a hung share can't block
+  pieces, so big plans, status files and logs load however slow the share is), pages show what's known while the
+  rest loads, and one bad source doesn't hide the others. `bun run start` also enlarges Node's I/O thread pool, so a hung share can't block
   it.
 
 The API is described at `/api`.

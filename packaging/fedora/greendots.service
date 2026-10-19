@@ -11,6 +11,9 @@ Environment=GREENDOTS_CONFIG=/etc/greendots/config.json
 Environment=NEXT_TELEMETRY_DISABLED=1
 ExecStart=/usr/bin/node /usr/lib/greendots/bin/greendots.mjs
 StateDirectory=greendots
+# finished runs' files, so the share is read once for them (cache.dir defaults to $XDG_CACHE_HOME/greendots)
+CacheDirectory=greendots
+Environment=XDG_CACHE_HOME=/var/cache
 Restart=on-failure
 NoNewPrivileges=yes
 PrivateTmp=yes

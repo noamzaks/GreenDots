@@ -1,7 +1,8 @@
 import { join, resolve, sep } from "node:path"
 import { ActivityLog } from "./activity"
+import { type CachedSummary, cachedFs, DiskCache, defaultCacheDir } from "./cache"
 import { Config } from "./config"
-import { type FsOptions, nodeFs } from "./fs"
+import { type Fs, type FsOptions, nodeFs } from "./fs"
 import { LogReader } from "./logs"
 import { Run, readMetadata } from "./run"
 import { loadConfig, saveConfig } from "./settings"
@@ -22,12 +23,19 @@ type Entry = { at: number; value?: unknown; error?: string; loading?: Promise<vo
 export class Store {
   readonly changed = new Signal() // something clients may be waiting for changed
   readonly activity: ActivityLog
-  readonly fs: ReturnType<typeof nodeFs>
+  readonly fs: ReturnType<typeof nodeFs> // the share itself: what `ops` counts
+  readonly disk: DiskCache
+  readonly files: Fs // the share through the disk cache, for reading runs
   readonly logs: LogReader
   private runs = new Map<string, Run>() // by `source/project/run`
   private viewers = new Map<string, number>() // open streams, by project ("" for the projects list)
   private cache = new Map<string, Entry>()
   private mtimes = new Map<string, number>()
+  private mtimesLoaded: Promise<void>
+  private mtimesSaved?: ReturnType<typeof setTimeout>
+  private summaries = new Map<string, CachedSummary | null | undefined>() // by run dir; null: none, undefined: loading
+  private queue: { project: string; source: string; name: string }[] = [] // runs to prefetch, one at a time
+  private prefetching = false
   private timer?: ReturnType<typeof setTimeout>
 
   constructor(
@@ -37,7 +45,12 @@ export class Store {
   ) {
     this.activity = fs.activity ?? new ActivityLog(config.activity)
     this.fs = nodeFs({ ...fs, activity: this.activity })
-    this.logs = new LogReader(this.fs)
+    this.disk = new DiskCache(config.cache.dir || defaultCacheDir(), config.cache.size * 1024 * 1024)
+    this.files = cachedFs(this.fs, this.disk)
+    this.logs = new LogReader(this.files)
+    this.mtimesLoaded = this.disk.mtimes().then((mtimes) => {
+      for (const [dir, mtime] of Object.entries(mtimes)) if (!this.mtimes.has(dir)) this.mtimes.set(dir, mtime)
+    })
     this.configure(config)
     // projects synced before the time was recorded: from now on, so starting up reads none of their old runs
     const unrecorded = config.synced.filter((project) => config.syncedSince[project] === undefined)
@@ -63,6 +76,8 @@ export class Store {
     this.logs.window = config.logs.window * 1024
     this.logs.preview = config.logs.preview * 1024
     this.activity.capacity = config.activity
+    this.disk.dir = config.cache.dir || defaultCacheDir()
+    this.disk.limit = config.cache.size * 1024 * 1024
     this.changed.notify()
   }
 
@@ -94,6 +109,11 @@ export class Store {
       this.cache.set(key, entry)
     }
     return { value: entry.value as T | undefined, error: entry.error }
+  }
+
+  /** How many runs are loaded in memory. */
+  get loaded() {
+    return this.runs.size
   }
 
   /** Resolves once nothing is loading (for tests). */
@@ -149,13 +169,32 @@ export class Store {
 
   private async listSource(path: string, project: string) {
     const names = await this.fs.list(join(path, project))
-    return Promise.all(
+    await this.mtimesLoaded
+    const runs = await Promise.all(
       names.map(async (name) => {
         const dir = join(path, project, name)
-        if (!this.mtimes.has(dir)) this.mtimes.set(dir, (await this.fs.stat(dir))?.mtime ?? 0)
+        if (!this.mtimes.has(dir)) {
+          this.mtimes.set(dir, (await this.fs.stat(dir))?.mtime ?? 0)
+          this.saveMtimes()
+        }
         return { name, mtime: this.mtimes.get(dir) ?? 0 }
       }),
     )
+    return runs
+  }
+
+  /** Saves the run directories' mtimes (a few seconds after they change), so they aren't stat-ed again. */
+  private saveMtimes() {
+    if (this.mtimesSaved) return
+    this.mtimesSaved = setTimeout(() => {
+      this.mtimesSaved = undefined
+      void this.disk.saveMtimes(Object.fromEntries(this.mtimes))
+    }, 5000)
+  }
+
+  private runDir(source: string, project: string, name: string) {
+    const path = this.config.sources.find((s) => s.name === source)?.path
+    return path && isName(project) && isName(name) ? join(path, project, name) : undefined
   }
 
   /** Whether a project has a run in memory that is still being checked for updates. */
@@ -167,12 +206,12 @@ export class Store {
 
   /** A run, loaded in the background the first time; `touch` marks it as viewed so it keeps syncing. */
   run(project: string, source: string, name: string, touch = true): Run | undefined {
-    const path = this.config.sources.find((s) => s.name === source)?.path
-    if (!path || !isName(project) || !isName(name)) return undefined
+    const dir = this.runDir(source, project, name)
+    if (!dir) return undefined
     const key = `${source}/${project}/${name}`
     let run = this.runs.get(key)
     if (!run) {
-      run = new Run(this.fs, join(path, project, name), project, source)
+      run = new Run(this.files, dir, project, source, this.prepare)
       this.runs.set(key, run)
       this.sync(run)
     }
@@ -180,10 +219,29 @@ export class Store {
     return run
   }
 
+  /** A run that had finished at this version of its plan is read from the disk cache. */
+  private prepare = async (run: Run) => {
+    const cached = await this.disk.summary(run.dir)
+    if (cached && cached.version === run.planMtime) this.disk.freeze(run.dir, cached.version)
+  }
+
+  private kept = new WeakSet<Run>()
+
+  /** Caches a run that won't change anymore: its files are read from the disk from now on, its summary too. */
+  private async keep(run: Run) {
+    if (this.kept.has(run) || run.planMtime === undefined || !run.settled(this.ms("slowAfter"))) return
+    this.kept.add(run)
+    this.disk.freeze(run.dir, run.planMtime)
+    const cached = { version: run.planMtime, summary: run.summary(), title: run.title }
+    this.summaries.set(run.dir, cached)
+    await this.disk.saveSummary(run.dir, cached)
+  }
+
   /** Syncs a run, letting clients know when something changed. */
   sync(run: Run) {
     return run.sync().then(
-      (changed) => {
+      async (changed) => {
+        await this.keep(run)
         if (!changed) return
         this.activity.add({ kind: "sync", path: run.dir, detail: `version ${run.version}${run.done ? ", done" : ""}` })
         this.changed.notify()
@@ -204,17 +262,73 @@ export class Store {
     return run.done ? "done" : idle > this.ms("stopAfter") ? "stopped" : idle > this.ms("slowAfter") ? "slow" : "live"
   }
 
-  /** A project's runs, with summaries of the first `count` made `since` then (which get loaded). */
-  runInfos = (project: string, count: number, touch: boolean, since = 0): { runs: RunInfo[]; loading: boolean } => {
+  /**
+   * A project's runs, newest first. The first `count` made `since` then are loaded and kept up to date; the
+   * others show what's known of them, in memory or cached on disk, and the first `prefetch` of them that
+   * aren't known yet are summarized in the background, slowly.
+   */
+  runInfos = (
+    project: string,
+    count: number,
+    touch: boolean,
+    since = 0,
+    prefetch = 0,
+  ): { runs: RunInfo[]; loading: boolean } => {
     const { runs, loading } = this.listRuns(project)
     return {
       loading,
-      runs: runs.map((info, index) => {
-        const key = `${info.source}/${project}/${info.name}`
-        const load = index < count && info.mtime >= since
-        const run = load ? this.run(project, info.source, info.name, touch) : this.runs.get(key)
-        return { ...info, title: run?.title, summary: run?.plan && run.summary(), polling: run && this.polling(run) }
+      runs: runs.map((info, index): RunInfo => {
+        let run = this.runs.get(`${info.source}/${project}/${info.name}`)
+        if (index < count && info.mtime >= since) run = this.run(project, info.source, info.name, touch)
+        else if (run && touch) run.lastAccess = Date.now()
+        if (run) return { ...info, title: run.title, summary: run.plan && run.summary(), polling: this.polling(run) }
+        const dir = this.runDir(info.source, project, info.name)
+        const cached = dir === undefined ? null : this.cachedSummary(dir)
+        if (cached === null && index < prefetch) this.prefetch(project, info.source, info.name)
+        return { ...info, title: cached?.title, summary: cached?.summary, polling: cached ? "done" : undefined }
       }),
+    }
+  }
+
+  /** A run's summary cached on disk: `undefined` while it's being looked up, `null` if there's none. */
+  private cachedSummary(dir: string) {
+    if (!this.summaries.has(dir)) {
+      this.summaries.set(dir, undefined)
+      void this.disk.summary(dir).then((cached) => {
+        this.summaries.set(dir, cached ?? null)
+        this.changed.notify() // to show it, or to prefetch it
+      })
+    }
+    return this.summaries.get(dir)
+  }
+
+  /** Queues a run to be summarized in the background, unless nobody looks at its project by its turn. */
+  private prefetch(project: string, source: string, name: string) {
+    if (this.queue.some((q) => q.project === project && q.source === source && q.name === name)) return
+    this.queue.push({ project, source, name })
+    if (!this.prefetching) void this.drain()
+  }
+
+  /** Summarizes the queued runs one at a time, `prefetch.interval` apart, so a project page can't flood a share. */
+  private async drain() {
+    this.prefetching = true
+    try {
+      for (let item = this.queue.shift(); item; item = this.queue.shift()) {
+        const { project, source, name } = item
+        const dir = this.runDir(source, project, name)
+        const key = `${source}/${project}/${name}`
+        if (!dir || !this.viewed(project) || this.runs.has(key) || this.summaries.get(dir)) continue
+        const run = new Run(this.files, dir, project, source, this.prepare)
+        await run.sync().catch(() => false)
+        await this.keep(run)
+        // a finished run's summary is all that's kept of it; one in progress is kept up to date while viewed
+        if (!this.kept.has(run)) this.runs.set(key, Object.assign(run, { lastAccess: Date.now() }))
+        this.activity.add({ kind: "sync", path: dir, detail: `prefetched${run.done ? ", done" : ""}` })
+        this.changed.notify()
+        await new Promise((resolve) => setTimeout(resolve, this.config.prefetch.interval * 1000))
+      }
+    } finally {
+      this.prefetching = false
     }
   }
 
@@ -316,7 +430,9 @@ export class Store {
     run.lastSync = Date.now()
     const mtime = (await this.fs.stat(join(run.dir, "plan.json")))?.mtime
     if (mtime === run.planMtime) return
-    const replacement = new Run(this.fs, run.dir, run.project, run.source)
+    this.disk.thaw(run.dir) // rerun into the same directory
+    this.summaries.delete(run.dir)
+    const replacement = new Run(this.files, run.dir, run.project, run.source, this.prepare)
     Object.assign(replacement, { lastAccess: run.lastAccess, viewers: run.viewers })
     this.runs.set(key, replacement)
     this.sync(replacement)

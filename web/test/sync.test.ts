@@ -44,7 +44,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 function makeStore(config: Record<string, unknown> = {}, save?: (config: Config) => void) {
   const sources = ["local", "network"].map((name) => ({ name, path: join(root, name) }))
   for (const { path } of sources) mkdirSync(path, { recursive: true })
-  const store = new Store(Config.parse({ sources, ...config }), save)
+  const store = new Store(Config.parse({ sources, cache: { dir: join(root, "cache") }, ...config }), save)
   stores.push(store)
   return store
 }
@@ -300,4 +300,71 @@ test("the activity log keeps the latest entries", () => {
   for (const path of ["a", "b", "c", "d", "e"]) activity.add({ kind: "stat", path })
   expect(activity.since(0).map((entry) => entry.path)).toEqual(["c", "d", "e"])
   expect(activity.since(4).map((entry) => entry.path)).toEqual(["e"])
+})
+
+describe("the disk cache", () => {
+  /** `count` finished runs of project "p", the newest first in the listing. */
+  function finishedRuns(count: number) {
+    return Array.from({ length: count }, (_, index) => {
+      const dir = makeRun("local", "p", `r${index}`)
+      finishAll(dir)
+      utimesSync(dir, 1000 + index, 1000 + index)
+      return dir
+    })
+  }
+  const page = (store: Store) => store.runInfos("p", 0, true, 0, store.config.prefetch.runs) // the project page
+  /** Keeps the project page open for `ms`: it's computed again whenever the store says something changed. */
+  const browse = async (store: Store, ms: number) => {
+    for (const end = Date.now() + ms; Date.now() < end; ) {
+      page(store)
+      await store.changed.wait(20)
+    }
+    await store.settled()
+    return page(store)
+  }
+
+  test("a project page prefetches a few runs, one at a time, and keeps only their summaries", async () => {
+    finishedRuns(10)
+    const store = makeStore({ prefetch: { runs: 3, interval: 0.05 } })
+    const unview = store.view("p")
+    const summarized = (await browse(store, 400)).runs.filter((run) => run.summary)
+    expect(summarized.map((run) => run.name)).toEqual(["r9", "r8", "r7"]) // the newest 3, not all 10
+    expect(summarized.every((run) => run.polling === "done" && run.summary?.passed === 2)).toBe(true)
+    const prefetched = store.activity.since(0).filter((entry) => entry.detail?.startsWith("prefetched"))
+    expect(prefetched).toHaveLength(3)
+    expect(prefetched[2].time - prefetched[0].time).toBeGreaterThanOrEqual(90) // 0.05s apart
+    expect(store.loaded).toBe(0) // finished: only their summaries are kept, on disk
+    unview()
+  })
+
+  test("after a restart, lists come from the cache and finished runs are read from the disk", async () => {
+    const [newest] = finishedRuns(3).reverse()
+    const first = makeStore({ prefetch: { runs: 3, interval: 0.01 } })
+    const unview = first.view("p")
+    await browse(first, 300)
+    const opened = first.run("p", "local", "r2")
+    await first.settled()
+    await first.logs.before(join(newest, `${ids[0]}.log.jsonl`), 0) // a log read through the cache
+    unview()
+    first.stop()
+    await sleep(5100) // the run directories' mtimes are saved a few seconds after they're seen
+    expect(opened?.done).toBe(true)
+
+    const store = makeStore()
+    const ops = () => store.fs.ops
+    store.view("p")
+    const { runs } = await browse(store, 300)
+    expect(runs.map((run) => [run.name, run.summary?.passed])).toEqual([
+      ["r2", 2],
+      ["r1", 2],
+      ["r0", 2],
+    ])
+    const kinds = store.activity.since(0).map((entry) => entry.kind)
+    expect(kinds.filter((kind) => kind !== "list")).toEqual([]) // no run directory is stat-ed, no run read
+    const listed = ops()
+    const run = store.run("p", "local", "r2")
+    await store.settled()
+    expect(run?.done && run.summary().passed).toBe(2)
+    expect(ops()).toBe(listed + 1) // its plan's mtime, to know it wasn't rerun: the rest comes from the disk
+  }, 15_000)
 })
