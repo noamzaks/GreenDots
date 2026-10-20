@@ -287,8 +287,8 @@ The Activity page shows every filesystem operation. The rules:
 
 - **Nothing is read for pages nobody looks at.** Browsers get updates over one event stream per tab, closed while the
   tab is hidden (unless its notifications are on); only open streams and synced projects make the server read.
-- **Syncing reads only new runs**: the `polling.recentRuns` latest runs made since the project was synced (when is
-  kept in the config's `syncedSince`), so syncing, or starting with synced projects, reads none of their old runs.
+- **Syncing reads only the latest runs**: a synced project's `polling.recentRuns` (5) latest runs are kept up to date,
+  whether or not any page is open; its older runs are read only when they're opened.
 - **Listings come from a cache** and are refreshed in the background: every `polling.list` seconds for projects
   being viewed or with runs in progress, every `polling.browse` for the rest. Each run directory is `stat`-ed once,
   ever: its mtime is kept in the disk cache.
@@ -298,9 +298,9 @@ The Activity page shows every filesystem operation. The rules:
   status files, nothing else. Finished runs' logs are cached too, in `filesystem.chunk` pieces, as they're read.
   Lists show cached summaries without reading anything, and a project's `metadata.toml` is read only when its
   listing shows one, and again only when that listing changes.
-- **Pages prefetch gently**: of the runs not cached yet, a project page reads its newest `prefetch.runs` and the home
-  page each project's newest, one run every `prefetch.interval` seconds, in the background, and only while the
-  page is open.
+- **Project pages prefetch gently**: of the runs not cached yet, only the newest `prefetch.runs` are read before
+  they're opened, one run every `prefetch.interval` seconds, in the background, and only while the page is open.
+  The home page reads no runs: it shows synced projects' latest runs, and what's cached of the others.
 - **A run's `plan.json` is read once.** Status files are tailed by byte offset: one `stat` per worker per check,
   and a read of only the new bytes when a file grew. Workers that finished are never read again, nor are finished
   runs.

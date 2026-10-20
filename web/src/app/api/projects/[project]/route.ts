@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/projects
       await watch(signal, send, (): ProjectRuns => {
         const { config, projectTitle, runInfos } = store()
         // cached summaries, and a few prefetched slowly: not every run on the page is read
-        const { runs, loading } = runInfos(project, 0, true, 0, config.prefetch.runs)
+        const { runs, loading } = runInfos(project, 0, true, config.prefetch.runs)
         return { name: project, title: projectTitle(project), synced: config.synced.includes(project), runs, loading }
       })
     } finally {
