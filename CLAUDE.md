@@ -16,7 +16,8 @@ cd web && bun run test && bun run lint && bunx tsc --noEmit && bun run build
 ```
 
 Demo data lives in the gitignored `example-data/`: run the `example/` suite with
-`--greendots=example-data/local/demo/<run>` (set `DEMO_SPEED=0.5` for a slow, live run). The `web` preview in
+`--greendots=example-data/local/demo/<run>` (set `DEMO_SPEED=0.5` for a slow, live run). For scale, `python example/samples.py
+example-data/local` writes ~1,500 runs (huge, broken, odd logs), and `--live` then keeps writing runs as they happen. The `web` preview in
 `.claude/launch.json` serves the last build on port 3417, so rebuild and restart it after changing the web app.
 
 ## Rules

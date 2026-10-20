@@ -67,7 +67,7 @@ function RunView(ref: RunRef) {
   const { project, source, run } = ref
   const [, navigate] = useLocation()
   const [notify, toggleNotify] = useNotificationsSetting()
-  const { plan, tests, summary, title, polling, error } = useRun(ref, notify)
+  const { plan, tests, summary, title, polling, error, waiting } = useRun(ref, notify)
   useDocumentTitle(`${title ?? run} (${source}) · ${project} · GreenDots`)
   useTitle(pages.run(ref), title)
   useRunAlerts(ref, summary, notify)
@@ -161,9 +161,10 @@ function RunView(ref: RunRef) {
   }, [errorColors])
 
   if (!plan)
-    return error ? (
+    return error || waiting ? (
       <Text c="dimmed">
-        Waiting for {run}/plan.json… ({error})
+        Waiting for {run}/plan.json: the run hasn't started, or its plan isn't readable yet.
+        {error && ` (${error})`}
       </Text>
     ) : (
       <Loader />

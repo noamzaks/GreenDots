@@ -24,6 +24,11 @@ export function api<Context>(handler: (request: NextRequest, context: Context) =
 
 type Send = (data: unknown) => void
 
+/** JSON serialized already, e.g. to send the same big message to several clients. */
+export class Serialized {
+  constructor(readonly text: string) {}
+}
+
 /** A server-sent event stream: `produce` sends messages until the client goes away (`signal`). */
 export function eventStream(request: NextRequest, produce: (send: Send, signal: AbortSignal) => Promise<void>) {
   const { activity } = store()
@@ -38,7 +43,8 @@ export function eventStream(request: NextRequest, produce: (send: Send, signal: 
       activity.add({ kind: "api", path, detail: "stream opened" })
       const ping = setInterval(() => write(": ping\n\n"), PING)
       try {
-        await produce((data) => write(`data: ${JSON.stringify(data)}\n\n`), request.signal)
+        const json = (data: unknown) => (data instanceof Serialized ? data.text : JSON.stringify(data))
+        await produce((data) => write(`data: ${json(data)}\n\n`), request.signal)
       } catch (error) {
         if (!request.signal.aborted)
           write(`data: ${JSON.stringify({ error: String((error as Error)?.message ?? error) })}\n\n`)

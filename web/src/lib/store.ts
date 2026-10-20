@@ -222,6 +222,7 @@ export class Store {
       if (snapshot) this.kept.set(run, 1) // as it's restored
       return snapshot
     })
+    run.created = this.disk.mtime(dir) ?? run.created // so an old directory without a plan isn't polled as new
     return run
   }
 
@@ -329,7 +330,8 @@ export class Store {
         const { project, source, name } = item
         const dir = this.runDir(source, project, name)
         const key = `${source}/${project}/${name}`
-        if (!dir || !this.viewed(project) || this.runs.has(key) || this.disk.summary(dir)) continue
+        const shown = this.viewed(project) || this.viewed("")
+        if (!dir || !shown || this.runs.has(key) || this.disk.summary(dir)) continue
         const run = this.run(project, source, name, false)
         await run?.syncing
         if (run && this.kept.has(run) && run.viewers === 0) this.runs.delete(key) // only its summary is shown
@@ -354,7 +356,10 @@ export class Store {
     }
     const projects = [...names].map((name): ProjectInfo => {
       const synced = this.config.synced.includes(name)
-      const { runs } = this.runInfos(name, synced ? this.config.polling.recentRuns : 0, false, this.syncedSince(name))
+      // while the home page is open, its runs are kept up to date, and each project's newest is read (then cached)
+      const prefetch = this.viewed("") ? 1 : 0
+      const recent = synced ? this.config.polling.recentRuns : 0
+      const { runs } = this.runInfos(name, recent, !!prefetch, this.syncedSince(name), prefetch)
       const shown = Math.max(this.config.polling.recentRuns, 3)
       return {
         name,

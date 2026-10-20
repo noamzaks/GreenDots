@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server"
-import { eventStream } from "@/lib/api"
+import { eventStream, Serialized } from "@/lib/api"
 import { store } from "@/lib/store"
 import type { RunUpdate } from "@/lib/types"
 
@@ -16,6 +16,7 @@ export async function GET(request: NextRequest, ctx: Params) {
       let sent: { version: number; planVersion: number; rest: string } | undefined
       while (!signal.aborted) {
         run.lastAccess = Date.now()
+        if (!run.plan) await run.syncing?.catch(() => {}) // its first read, to tell loading from not started
         if (!run.plan) send({ waiting: true })
         else {
           const { version, planVersion, title, plan } = run
@@ -23,17 +24,27 @@ export async function GET(request: NextRequest, ctx: Params) {
           const polling = store().polling(run)
           const rest = JSON.stringify([title, summary, polling])
           if (!sent || version !== sent.version || planVersion !== sent.planVersion || rest !== sent.rest) {
-            const update: RunUpdate = {
+            const update = (): RunUpdate => ({
               full: !sent,
               version,
               planVersion,
               title,
-              plan: planVersion !== sent?.planVersion ? plan : undefined,
+              // without the tests' log files, which browsers don't need
+              plan:
+                planVersion !== sent?.planVersion
+                  ? { ...plan, tests: plan.tests.map(({ log: _, ...test }) => test) }
+                  : undefined,
               summary,
               polling,
               tests: run.changes(sent?.version ?? -1),
+            })
+            if (sent) send(update())
+            else {
+              // everything: serialized once per version, however many clients open it
+              const key = `${version}/${planVersion}/${rest}`
+              if (run.full?.key !== key) run.full = { key, json: new Serialized(JSON.stringify(update())) }
+              send(run.full.json)
             }
-            send(update)
             sent = { version, planVersion, rest }
           }
         }

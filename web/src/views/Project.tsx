@@ -7,6 +7,7 @@ import { ProjectActions } from "@/components/ProjectActions"
 import { describe, RunBar } from "@/components/RunBar"
 import { apis, COLORS, pages, useStream } from "@/lib/client"
 import { plural } from "@/lib/format"
+import { useProgressive } from "@/lib/progressive"
 import { useParam } from "@/lib/router"
 import { ago, took } from "@/lib/time"
 import { useTitle } from "@/lib/titles"
@@ -20,6 +21,7 @@ export default function ProjectPage() {
   const { data, error } = useStream<ProjectRuns>(apis.project(project))
   useDocumentTitle(`${data?.title ?? project} · GreenDots`)
   useTitle(pages.project(project), data?.title)
+  const { count, sentinel } = useProgressive(data?.runs.length ?? 0)
   if (!data) return error ? <Text c="red">{error}</Text> : <Loader />
   return (
     <Stack maw={1400} mx="auto" gap="md">
@@ -48,7 +50,7 @@ export default function ProjectPage() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {data.runs.map(({ source, name, title, mtime, summary, polling }) => {
+          {data.runs.slice(0, count).map(({ source, name, title, mtime, summary, polling }) => {
             const page = pages.run({ project, source, run: name })
             return (
               <Table.Tr key={`${source}/${name}`} style={{ cursor: "pointer" }} onClick={() => navigate(page)}>
@@ -100,6 +102,7 @@ export default function ProjectPage() {
           })}
         </Table.Tbody>
       </Table>
+      {count < data.runs.length && <div ref={sentinel} />}
     </Stack>
   )
 }

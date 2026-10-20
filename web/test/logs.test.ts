@@ -55,6 +55,17 @@ test("a line still being written is left for later", async () => {
   expect((await reader.forward(path, tail.end, size)).lines).toEqual([])
 })
 
+test("once nothing more will be written, a last line without a newline is shown, however long", async () => {
+  const reader = new LogReader(nodeFs())
+  let size = write(entry("done"), "no newline at the end")
+  const tail = await reader.before(path, size)
+  const last = await reader.forward(path, tail.end, size, true)
+  expect(last).toMatchObject({ end: size, lines: [{ message: "no newline at the end", length: 21 }] })
+  size = write(entry("done"), "x".repeat(WINDOW * 2))
+  const huge = await reader.forward(path, (await reader.before(path, size)).end, size, true)
+  expect(huge).toMatchObject({ end: size, lines: [{ truncated: true, length: WINDOW * 2 }] })
+})
+
 test("huge lines are previewed, never skipped, and can be read in full", async () => {
   const huge = `${"é".repeat(1_500_000)}"\\ end` // 3 MB, with characters that need escaping
   const size = write(entry("before"), entry(huge), entry("after"))

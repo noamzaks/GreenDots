@@ -89,7 +89,8 @@ function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
   const firstItemIndex = FIRST_INDEX - (older === -1 ? shown.length : older)
   const filterKey = `${hiddenLevels}|${hiddenLoggers}|${debouncedSearch}`
   const hiddenCount = hiddenLoggers.filter((logger) => loggers.includes(logger)).length
-  const coverage = log.size ? Math.round((100 * (log.size - log.start)) / log.size) : 100
+  const percent = log.size ? (100 * (log.size - log.start)) / log.size : 100
+  const coverage = percent < 1 ? Number(percent.toPrecision(1)) : Math.round(percent) // e.g. 0.3, not 0
 
   // keep loading older lines until the view is filled (e.g. when the tail is a single huge line)
   const { loaded, start, lines, loadOlder } = log
