@@ -1,8 +1,8 @@
 import { join, resolve, sep } from "node:path"
 import { ActivityLog } from "./activity"
-import { type CachedSummary, cachedFs, DiskCache, defaultCacheDir } from "./cache"
+import { cachedFs, DiskCache, defaultCacheDir } from "./cache"
 import { Config } from "./config"
-import { type Fs, type FsOptions, nodeFs } from "./fs"
+import { background, type Fs, type FsOptions, nodeFs } from "./fs"
 import { LogReader } from "./logs"
 import { Run, readMetadata } from "./run"
 import { loadConfig, saveConfig } from "./settings"
@@ -18,22 +18,21 @@ type Entry = { at: number; value?: unknown; error?: string; loading?: Promise<vo
  * An in-memory mirror of the sources' `<project>/<run>/` directories, made for slow network shares:
  * - listings are served from cache and refreshed in the background (stale-while-revalidate);
  * - only what someone looks at (an open stream) or syncs (the latest runs of synced projects) is read;
- * - runs are polled while they change, more slowly once they don't, and not at all after a while.
+ * - runs are polled while they change, more slowly once they don't, and not at all after a while;
+ * - finished runs are cached on disk, whole;
+ * - what nobody waits for (prefetching, runs that aren't open) is read in the background, after the rest.
  */
 export class Store {
   readonly changed = new Signal() // something clients may be waiting for changed
   readonly activity: ActivityLog
   readonly fs: ReturnType<typeof nodeFs> // the share itself: what `ops` counts
   readonly disk: DiskCache
-  readonly files: Fs // the share through the disk cache, for reading runs
+  readonly files: Fs // the share through the disk cache, for reading logs
   readonly logs: LogReader
   private runs = new Map<string, Run>() // by `source/project/run`
   private viewers = new Map<string, number>() // open streams, by project ("" for the projects list)
   private cache = new Map<string, Entry>()
-  private mtimes = new Map<string, number>()
-  private mtimesLoaded: Promise<void>
-  private mtimesSaved?: ReturnType<typeof setTimeout>
-  private summaries = new Map<string, CachedSummary | null | undefined>() // by run dir; null: none, undefined: loading
+  private syncs = new Set<Promise<void>>() // syncs and what follows them (caching runs that finished)
   private queue: { project: string; source: string; name: string }[] = [] // runs to prefetch, one at a time
   private prefetching = false
   private timer?: ReturnType<typeof setTimeout>
@@ -48,9 +47,7 @@ export class Store {
     this.disk = new DiskCache(config.cache.dir || defaultCacheDir(), config.cache.size * 1024 * 1024)
     this.files = cachedFs(this.fs, this.disk)
     this.logs = new LogReader(this.files)
-    this.mtimesLoaded = this.disk.mtimes().then((mtimes) => {
-      for (const [dir, mtime] of Object.entries(mtimes)) if (!this.mtimes.has(dir)) this.mtimes.set(dir, mtime)
-    })
+    void this.disk.loaded.then(() => this.changed.notify()) // to show cached summaries
     this.configure(config)
     // projects synced before the time was recorded: from now on, so starting up reads none of their old runs
     const unrecorded = config.synced.filter((project) => config.syncedSince[project] === undefined)
@@ -77,7 +74,6 @@ export class Store {
     this.logs.window = config.logs.window * 1024
     this.logs.preview = config.logs.preview * 1024
     this.activity.capacity = config.activity
-    this.disk.dir = config.cache.dir || defaultCacheDir()
     this.disk.limit = config.cache.size * 1024 * 1024
     this.changed.notify()
   }
@@ -94,12 +90,13 @@ export class Store {
 
   /** The cached value of `key`, refreshed in the background once older than `maxAge`. */
   private peek<T>(key: string, maxAge: number, load: () => Promise<T>): { value?: T; error?: string } {
-    const entry = this.cache.get(key) ?? { at: 0 }
+    const entry = this.cache.get(key) ?? { at: Number.NEGATIVE_INFINITY }
     if (Date.now() - entry.at >= maxAge && !entry.loading) {
       entry.loading = load().then(
         (value) => {
           const changed = JSON.stringify(value) !== JSON.stringify(entry.value) || entry.error !== undefined
           Object.assign(entry, { value, error: undefined, at: Date.now(), loading: undefined })
+          if (changed && key.startsWith("runs:")) this.cache.delete(`title:${key.slice(key.indexOf("/") + 1)}`)
           if (changed) this.changed.notify()
         },
         (error) => {
@@ -121,7 +118,7 @@ export class Store {
   async settled() {
     for (;;) {
       const loads = [...this.cache.values()].map((entry) => entry.loading)
-      const pending = [...loads, ...[...this.runs.values()].map((run) => run.syncing)].filter(Boolean)
+      const pending = [...loads, ...this.syncs].filter(Boolean)
       if (!pending.length) return
       await Promise.allSettled(pending)
     }
@@ -145,7 +142,10 @@ export class Store {
   projectTitle = (project: string) => {
     const source = this.config.sources.find((source) => this.sourceProjects(source).value?.includes(project))
     if (!source) return undefined
-    return this.peek(`title:${project}`, 10 * MINUTE, async () => {
+    // read once its listing shows a metadata.toml, and again only when that listing changes
+    const listing = this.cache.get(`runs:${source.name}/${project}`) as { value?: { metadata?: boolean } } | undefined
+    if (!listing?.value?.metadata) return undefined
+    return this.peek(`title:${project}`, Number.POSITIVE_INFINITY, async () => {
       const name = (await readMetadata(this.fs, join(source.path, project)))?.name
       return typeof name === "string" ? name : undefined
     }).value
@@ -162,37 +162,28 @@ export class Store {
         this.listSource(source.path, project),
       )
       loading ||= value === undefined
-      return (value ?? []).map((run) => ({ ...run, source: source.name }))
+      return (value?.runs ?? []).map((run) => ({ ...run, source: source.name }))
     })
     runs.sort((a, b) => b.mtime - a.mtime || b.name.localeCompare(a.name, undefined, { numeric: true }))
     return { runs, loading }
   }
 
   private async listSource(path: string, project: string) {
-    const names = await this.fs.list(join(path, project))
-    await this.mtimesLoaded
+    const { dirs: names, files } = await this.fs.entries(join(path, project))
+    await this.disk.loaded
     const runs = await Promise.all(
       names.map(async (name) => {
         const dir = join(path, project, name)
-        if (!this.mtimes.has(dir)) {
-          const mtime = (await this.fs.stat(dir))?.mtime
+        let mtime = this.disk.mtime(dir)
+        if (mtime === undefined) {
+          mtime = (await this.fs.stat(dir))?.mtime
           if (mtime === undefined) return { name, mtime: 0 } // unreadable for now: stat-ed again next time
-          this.mtimes.set(dir, mtime)
-          this.saveMtimes()
+          this.disk.setMtime(dir, mtime)
         }
-        return { name, mtime: this.mtimes.get(dir) ?? 0 }
+        return { name, mtime }
       }),
     )
-    return runs
-  }
-
-  /** Saves the run directories' mtimes (a few seconds after they change), so they aren't stat-ed again. */
-  private saveMtimes() {
-    if (this.mtimesSaved) return
-    this.mtimesSaved = setTimeout(() => {
-      this.mtimesSaved = undefined
-      void this.disk.saveMtimes(Object.fromEntries(this.mtimes))
-    }, 5000)
+    return { runs, metadata: files.includes("metadata.toml") }
   }
 
   private runDir(source: string, project: string, name: string) {
@@ -207,57 +198,82 @@ export class Store {
     return false
   }
 
-  /** A run, loaded in the background the first time; `touch` marks it as viewed so it keeps syncing. */
+  /**
+   * A run, loaded the first time (from the disk cache if it finished, else from the share). `touch` means someone
+   * is looking at it: it's read right away, and kept up to date for a while. Otherwise it's read in the background.
+   */
   run(project: string, source: string, name: string, touch = true): Run | undefined {
     const dir = this.runDir(source, project, name)
     if (!dir) return undefined
     const key = `${source}/${project}/${name}`
     let run = this.runs.get(key)
     if (!run) {
-      run = new Run(this.files, dir, project, source, this.prepare)
+      run = this.load(dir, project, source)
       this.runs.set(key, run)
-      this.sync(run)
+      this.sync(run, touch)
     }
     if (touch) run.lastAccess = Date.now()
     return run
   }
 
-  /** A run that had finished at this version of its plan is read from the disk cache. */
-  private prepare = async (run: Run) => {
-    const cached = await this.disk.summary(run.dir)
-    if (cached && cached.version === run.planMtime) this.disk.freeze(run.dir, cached.version)
+  private load(dir: string, project: string, source: string) {
+    const run: Run = new Run(this.fs, dir, project, source, async (version) => {
+      const snapshot = await this.disk.snapshot(dir, version)
+      if (snapshot) this.kept.set(run, 1) // as it's restored
+      return snapshot
+    })
+    return run
   }
 
-  private kept = new WeakSet<Run>()
+  private kept = new WeakMap<Run, number>() // the version of each run that was cached
 
-  /** Caches a run that won't change anymore: its files are read from the disk from now on, its summary too. */
+  /** Caches a run once it finished or stopped: whole, and its summary for lists. */
   private async keep(run: Run) {
-    if (this.kept.has(run) || run.planMtime === undefined || !run.settled(this.ms("slowAfter"))) return
-    this.kept.add(run)
-    this.disk.freeze(run.dir, run.planMtime)
-    const cached = { version: run.planMtime, summary: run.summary(), title: run.title }
-    this.summaries.set(run.dir, cached)
-    await this.disk.saveSummary(run.dir, cached)
+    const final = run.settled(this.ms("slowAfter"))
+    if (this.kept.get(run) === run.version || !(final || this.polling(run) === "stopped")) return
+    const snapshot = run.snapshot(final)
+    if (!snapshot) return
+    this.kept.set(run, run.version)
+    await this.disk.save(run.dir, snapshot, { version: snapshot.version, summary: run.summary(), title: run.title })
   }
 
-  /** Syncs a run, letting clients know when something changed. */
-  sync(run: Run) {
-    return run.sync().then(
+  /** Syncs a run, letting clients know when something changed; in the background unless someone has it open. */
+  sync(run: Run, now = run.viewers > 0) {
+    const synced = now
+      ? run.sync()
+      : background(
+          () => run.sync(),
+          () => run.viewers === 0,
+        )
+    const done = synced.then(
       async (changed) => {
+        if (changed) {
+          this.activity.add({
+            kind: "sync",
+            path: run.dir,
+            detail: `version ${run.version}${run.done ? ", done" : ""}`,
+          })
+          this.changed.notify()
+        }
         await this.keep(run)
-        if (!changed) return
-        this.activity.add({ kind: "sync", path: run.dir, detail: `version ${run.version}${run.done ? ", done" : ""}` })
-        this.changed.notify()
       },
       (error) => this.activity.add({ kind: "sync", path: run.dir, error: String(error?.message ?? error) }),
     )
+    return this.track(done)
+  }
+
+  /** Keeps track of work that `settled` and `stop` wait for. */
+  private track(work: Promise<void>) {
+    this.syncs.add(work)
+    void work.finally(() => this.syncs.delete(work))
+    return work
   }
 
   /** Checks a run right away, and keeps checking it as if it just changed. */
   check(run: Run) {
     run.lastChange = Date.now()
     this.changed.notify()
-    return this.sync(run)
+    return this.sync(run, true)
   }
 
   polling(run: Run): Polling {
@@ -286,23 +302,12 @@ export class Store {
         else if (run && touch) run.lastAccess = Date.now()
         if (run) return { ...info, title: run.title, summary: run.plan && run.summary(), polling: this.polling(run) }
         const dir = this.runDir(info.source, project, info.name)
-        const cached = dir === undefined ? null : this.cachedSummary(dir)
-        if (cached === null && index < prefetch) this.prefetch(project, info.source, info.name)
-        return { ...info, title: cached?.title, summary: cached?.summary, polling: cached ? "done" : undefined }
+        const cached = dir === undefined ? undefined : this.disk.summary(dir)
+        if (!cached && index < prefetch) this.prefetch(project, info.source, info.name)
+        const polling = cached && (cached.summary.done ? "done" : "stopped")
+        return { ...info, title: cached?.title, summary: cached?.summary, polling }
       }),
     }
-  }
-
-  /** A run's summary cached on disk: `undefined` while it's being looked up, `null` if there's none. */
-  private cachedSummary(dir: string) {
-    if (!this.summaries.has(dir)) {
-      this.summaries.set(dir, undefined)
-      void this.disk.summary(dir).then((cached) => {
-        this.summaries.set(dir, cached ?? null)
-        this.changed.notify() // to show it, or to prefetch it
-      })
-    }
-    return this.summaries.get(dir)
   }
 
   /** Queues a run to be summarized in the background, unless nobody looks at its project by its turn. */
@@ -312,22 +317,23 @@ export class Store {
     if (!this.prefetching) void this.drain()
   }
 
-  /** Summarizes the queued runs one at a time, `prefetch.interval` apart, so a project page can't flood a share. */
+  /**
+   * Reads the queued runs in the background, one at a time and `prefetch.interval` apart, so a project page can't
+   * flood a share. A finished one is cached on disk and dropped from memory; one in progress is kept up to date.
+   */
   private async drain() {
     this.prefetching = true
     try {
+      await this.disk.loaded
       for (let item = this.queue.shift(); item; item = this.queue.shift()) {
         const { project, source, name } = item
         const dir = this.runDir(source, project, name)
         const key = `${source}/${project}/${name}`
-        if (!dir || !this.viewed(project) || this.runs.has(key) || this.summaries.get(dir)) continue
-        const run = new Run(this.files, dir, project, source, this.prepare)
-        await run.sync().catch(() => false)
-        await this.keep(run)
-        // a finished run's summary is all that's kept of it; one in progress is kept up to date while viewed
-        if (!this.kept.has(run)) this.runs.set(key, Object.assign(run, { lastAccess: Date.now() }))
-        this.activity.add({ kind: "sync", path: dir, detail: `prefetched${run.done ? ", done" : ""}` })
-        this.changed.notify()
+        if (!dir || !this.viewed(project) || this.runs.has(key) || this.disk.summary(dir)) continue
+        const run = this.run(project, source, name, false)
+        await run?.syncing
+        if (run && this.kept.has(run) && run.viewers === 0) this.runs.delete(key) // only its summary is shown
+        this.activity.add({ kind: "sync", path: dir, detail: `prefetched${run?.done ? ", done" : ""}` })
         await new Promise((resolve) => setTimeout(resolve, this.config.prefetch.interval * 1000))
       }
     } finally {
@@ -386,11 +392,11 @@ export class Store {
     return path?.startsWith(run.dir + sep) ? path : undefined
   }
 
-  /** A log's size, stat-ed at most once per poll interval however many clients follow it. */
+  /** A log's size, stat-ed at most once per poll interval however many clients follow it (and once if it's cached). */
   async logSize(path: string) {
     const entry = this.cache.get(`size:${path}`)
     if (entry && Date.now() - entry.at < this.ms("run")) return entry.value as number
-    const size = (await this.fs.stat(path))?.size ?? 0
+    const size = (await this.files.stat(path))?.size ?? 0
     this.cache.set(`size:${path}`, { at: Date.now(), value: size })
     return size
   }
@@ -399,12 +405,17 @@ export class Store {
   tick() {
     const now = Date.now()
     for (const [key, entry] of this.cache)
-      if (!entry.loading && now - entry.at > 2 * this.ms("browse")) this.cache.delete(key)
+      if (!entry.loading && now - entry.at > 2 * this.ms("browse") && !key.startsWith("title:")) this.cache.delete(key)
     if (this.viewed("")) this.projects()
     const synced = new Set<Run>()
     for (const project of new Set([...this.config.synced, ...this.viewers.keys()])) {
       if (!project || !(this.viewed(project) || this.config.synced.includes(project))) continue
-      const { runs } = this.listRuns(project)
+      const { runs } = this.viewed(project)
+        ? this.listRuns(project)
+        : background(
+            () => this.listRuns(project),
+            () => !this.viewed(project),
+          )
       if (!this.config.synced.includes(project)) continue
       const since = this.syncedSince(project)
       for (const { source, name } of runs
@@ -422,10 +433,13 @@ export class Store {
       }
       const since = now - run.lastSync
       const polling = this.polling(run)
+      // open runs are checked every `run` seconds, those only listed or synced every `list`
+      const every = this.ms(polling === "slow" ? "slowRun" : run.viewers > 0 ? "run" : "list")
+      if (polling === "done" || polling === "stopped") this.track(this.keep(run)) // e.g. after a quiet while
+      // a finished run's directory may be reused for a new run: check while someone looks at it
       if (polling === "done") {
-        // a finished run's directory may be reused for a new run: check while someone looks at it
         if (run.viewers > 0 && since > this.ms("slowRun")) this.replaceIfRerun(key, run)
-      } else if (polling !== "stopped" && since >= this.ms(polling === "slow" ? "slowRun" : "run")) this.sync(run)
+      } else if (polling !== "stopped" && since >= every) this.sync(run)
     }
   }
 
@@ -433,9 +447,8 @@ export class Store {
     run.lastSync = Date.now()
     const mtime = (await this.fs.stat(join(run.dir, "plan.json")))?.mtime
     if (mtime === run.planMtime) return
-    this.disk.thaw(run.dir) // rerun into the same directory
-    this.summaries.delete(run.dir)
-    const replacement = new Run(this.files, run.dir, run.project, run.source, this.prepare)
+    this.disk.forget(run.dir) // rerun into the same directory
+    const replacement = this.load(run.dir, run.project, run.source)
     Object.assign(replacement, { lastAccess: run.lastAccess, viewers: run.viewers })
     this.runs.set(key, replacement)
     this.sync(replacement)
@@ -455,8 +468,10 @@ export class Store {
     loop()
   }
 
-  stop() {
+  async stop() {
     clearTimeout(this.timer)
+    await Promise.allSettled(this.syncs)
+    await this.disk.flush()
   }
 }
 

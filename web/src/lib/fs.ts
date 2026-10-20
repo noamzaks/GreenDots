@@ -1,10 +1,11 @@
+import { AsyncLocalStorage } from "node:async_hooks"
 import { open, readdir, stat } from "node:fs/promises"
-import pLimit from "p-limit"
 import type { ActivityKind, ActivityLog } from "./activity"
 
 /** The few filesystem operations the server uses; each one may be a slow network round trip. */
 export type Fs = {
-  list(dir: string): Promise<string[]> // rejects when unreadable
+  list(dir: string): Promise<string[]> // its directories; rejects when unreadable
+  entries(dir: string): Promise<{ dirs: string[]; files: string[] }> // the same listing, with its files
   stat(path: string): Promise<{ size: number; mtime: number } | undefined>
   read(path: string, offset: number, length: number): Promise<Buffer>
   readText(path: string): Promise<string | undefined>
@@ -20,37 +21,123 @@ export type FsOptions = {
   activity?: ActivityLog
 }
 
+const lane = new AsyncLocalStorage<() => boolean>()
+
 /**
- * Node's fs, with at most `concurrency` operations at a time and `rate` a second (0: no limit) so a slow share
- * isn't flooded, giving up on operations after `timeout` ms (an unreachable share hangs them), and recording
- * every one in `activity`. A hung operation keeps its slot until it really ends, so they can't pile up.
+ * Runs `work` in the background (e.g. prefetching, or keeping runs nobody has open up to date): its operations
+ * wait for the ones someone is waiting for. `still` says whether it's still in the background: once a run is
+ * opened, what's left of reading it isn't kept waiting.
+ */
+export const background = <T>(work: () => T, still: () => boolean = () => true) => lane.run(still, work)
+
+type Job = { start: () => void; background?: () => boolean; gone?: boolean }
+
+/**
+ * Node's fs, sparing a slow share: operations someone waits for go first, `concurrency` at a time; background ones
+ * go one at a time, at most `rate` a second (0: no limit), and only while no other operation waits. Operations
+ * give up after `timeout` ms (an unreachable share hangs them), counted from when they were asked for, or from
+ * when they start for background ones. A hung operation keeps its slot until it really ends, so they can't pile up.
+ * Every operation is recorded in `activity`.
  */
 export function nodeFs({ concurrency = 8, rate = 0, timeout = 30_000, chunk = 1 << 20, activity }: FsOptions = {}) {
-  const limit = pLimit(concurrency)
-  let next = 0 // when the next operation may start, to keep to `rate`
-  /** Waits for an operation's turn: they're spaced `1 / rate` seconds apart, in the order they come. */
-  const turn = () => {
-    if (!fs.rate) return Promise.resolve()
-    const now = performance.now()
-    const at = Math.max(now, next)
-    next = at + 1000 / fs.rate
-    return at > now ? new Promise<void>((resolve) => setTimeout(resolve, at - now)) : Promise.resolve()
+  let waiting: Job[] = []
+  let active = 0
+  let behind = false // a background operation is running
+  let next = 0 // when the next background operation may start
+  let waking = false // pump is due when it may
+
+  const pump = () => {
+    waiting = waiting.filter((job) => !job.gone)
+    while (active < fs.concurrency && waiting.length) {
+      let index = waiting.findIndex((job) => !job.background?.())
+      if (index < 0) {
+        if (behind) return // one at a time
+        const wait = next - performance.now()
+        if (wait > 0) {
+          if (!waking)
+            setTimeout(() => {
+              waking = false
+              pump()
+            }, wait)
+          waking = true
+          return
+        }
+        next = performance.now() + (fs.rate ? 1000 / fs.rate : 0)
+        index = 0
+      }
+      waiting.splice(index, 1)[0].start()
+    }
   }
+
+  const run = <T>(kind: ActivityKind, path: string, op: () => Promise<T>): Promise<T> => {
+    const still = lane.getStore()
+    let start = performance.now()
+    let clock: ReturnType<typeof setTimeout> | undefined
+    return new Promise<T>((resolve, reject) => {
+      const record = (extra: { bytes?: number; error?: string }) =>
+        activity?.add({ kind, path, ms: performance.now() - start, ...extra })
+      const tick = () => {
+        clock = setTimeout(() => {
+          job.gone = true // if it hasn't started, it won't
+          record({ error: "ETIMEDOUT" })
+          reject(Object.assign(new Error(`${path}: timed out`), { code: "ETIMEDOUT" }))
+        }, fs.timeout)
+      }
+      const job: Job = {
+        background: still,
+        start: () => {
+          const late = !!job.background?.()
+          if (late) {
+            start = performance.now()
+            tick()
+          }
+          active++
+          behind ||= late
+          fs.ops++
+          op()
+            .then(
+              (result) => {
+                if (job.gone) return
+                record({ bytes: Buffer.isBuffer(result) ? result.length : undefined })
+                resolve(result)
+              },
+              (error) => {
+                if (job.gone) return
+                record({ error: (error as NodeJS.ErrnoException).code ?? String(error) })
+                reject(error)
+              },
+            )
+            .finally(() => {
+              job.gone = true
+              clearTimeout(clock)
+              active--
+              if (late) behind = false
+              pump()
+            })
+        },
+      }
+      if (!still?.()) tick()
+      waiting.push(job)
+      pump()
+    })
+  }
+
   const fs = {
     ops: 0,
     rate,
-    set concurrency(value: number) {
-      limit.concurrency = value
-    },
+    concurrency,
     timeout,
     chunk,
-    list: (dir: string) =>
+    entries: (dir: string) =>
       run("list", dir, async () => {
-        const entries = await readdir(dir, { withFileTypes: true })
-        return entries
-          .filter((e) => !e.name.startsWith(".") && (e.isDirectory() || e.isSymbolicLink()))
-          .map((e) => e.name)
+        const entries = (await readdir(dir, { withFileTypes: true })).filter((e) => !e.name.startsWith("."))
+        const isDir = (e: (typeof entries)[number]) => e.isDirectory() || e.isSymbolicLink()
+        return {
+          dirs: entries.filter(isDir).map((e) => e.name),
+          files: entries.filter((e) => !isDir(e)).map((e) => e.name),
+        }
       }),
+    list: (dir: string) => fs.entries(dir).then((entries) => entries.dirs),
     stat: (path: string) =>
       run("stat", path, () => stat(path)).then(
         (s) => ({ size: s.size, mtime: s.mtimeMs }),
@@ -79,39 +166,6 @@ export function nodeFs({ concurrency = 8, rate = 0, timeout = 30_000, chunk = 1 
           await file.close()
         }
       }),
-  }
-  // the timeout starts at an operation's turn: waiting for it isn't a sign of a hung share, unlike a full queue
-  const run = <T>(kind: ActivityKind, path: string, op: () => Promise<T>): Promise<T> =>
-    turn().then(() => attempt(kind, path, op))
-  const attempt = <T>(kind: ActivityKind, path: string, op: () => Promise<T>): Promise<T> => {
-    const start = performance.now()
-    const record = (extra: { bytes?: number; error?: string }) =>
-      activity?.add({ kind, path, ms: performance.now() - start, ...extra })
-    const task = limit(() => {
-      fs.ops++
-      return op()
-    })
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const timedOut = new Promise<never>((_, reject) => {
-      timer = setTimeout(
-        () => reject(Object.assign(new Error(`${path}: timed out`), { code: "ETIMEDOUT" })),
-        fs.timeout,
-      )
-    })
-    return Promise.race([task, timedOut]).then(
-      (result) => {
-        clearTimeout(timer)
-        const bytes =
-          typeof result === "string" ? Buffer.byteLength(result) : Buffer.isBuffer(result) ? result.length : undefined
-        record({ bytes })
-        return result
-      },
-      (error) => {
-        clearTimeout(timer)
-        record({ error: (error as NodeJS.ErrnoException).code ?? String(error) })
-        throw error
-      },
-    )
   }
   return fs
 }

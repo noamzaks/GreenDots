@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 import { ActivityLog } from "../src/lib/activity"
 import { Config } from "../src/lib/config"
-import { nodeFs } from "../src/lib/fs"
+import { background, nodeFs } from "../src/lib/fs"
 import { applyEvent, Run } from "../src/lib/run"
 import { Store } from "../src/lib/store"
 import { normalizePlan, type StatusEvent } from "../src/lib/types"
@@ -140,7 +140,7 @@ describe("Store", () => {
     writeFileSync(join(root, "local", "p", "metadata.toml"), 'name = "Project P"')
     const store = makeStore()
     expect(store.projects()).toMatchObject({ projects: [], loading: true }) // answers right away
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       store.projects()
       await store.settled()
     }
@@ -278,10 +278,9 @@ describe("Store", () => {
     await sleep(20) // past the filesystem's coarse clock
     const fresh = makeRun("local", "p", "new")
     append(fresh, 0, line({ type: "start", test: ids[0] }))
-    await sleep(60) // its listing is refreshed within polling.browse
-    await tick()
-    await tick()
-    expect(store.runInfos("p", 0, false).runs.find((run) => run.name === "new")?.summary?.running).toBe(1)
+    const running = () => store.runInfos("p", 0, false).runs.find((run) => run.name === "new")?.summary?.running
+    for (const end = Date.now() + 1000; Date.now() < end && running() !== 1; ) await tick() // within polling.browse
+    expect(running()).toBe(1)
     expect(touched()).toEqual([])
   })
 })
@@ -297,15 +296,20 @@ test("filesystem operations time out, but keep their slot until they really end"
   openSync(fifo, "w") // let the hung read end
 })
 
-test("filesystem operations are limited per second, without timing out while they wait their turn", async () => {
-  const fs = nodeFs({ rate: 10, timeout: 100 })
+test("background operations go one at a time, at most `rate` a second, after the others", async () => {
+  const activity = new ActivityLog()
+  const fs = nodeFs({ rate: 10, timeout: 100, activity })
   const start = performance.now()
-  const stats = await Promise.all(Array.from({ length: 5 }, () => fs.stat(root)))
-  expect(stats.every(Boolean)).toBe(true) // the last one waited 400 ms for its turn, but its 100 ms timeout started then
+  const stats = background(() => Promise.all(Array.from({ length: 5 }, () => fs.stat(root))))
+  await sleep(50)
+  await fs.stat(join(root, "now")) // someone waits for this one: it doesn't wait for the background
+  expect(performance.now() - start).toBeLessThan(100)
+  expect((await stats).every(Boolean)).toBe(true) // the last one waited 400 ms, but its timeout started then
   expect(performance.now() - start).toBeGreaterThanOrEqual(390)
+  expect(activity.since(0).map((entry) => entry.path)).toEqual([root, join(root, "now"), root, root, root, root])
   fs.rate = 0 // no limit
   const quick = performance.now()
-  await Promise.all(Array.from({ length: 20 }, () => fs.stat(root)))
+  await background(() => Promise.all(Array.from({ length: 20 }, () => fs.stat(root))))
   expect(performance.now() - quick).toBeLessThan(200)
 })
 
@@ -360,8 +364,7 @@ describe("the disk cache", () => {
     await first.settled()
     await first.logs.before(join(newest, `${ids[0]}.log.jsonl`), 0) // a log read through the cache
     unview()
-    first.stop()
-    await sleep(5100) // the run directories' mtimes are saved a few seconds after they're seen
+    await first.stop() // saves the index of mtimes and summaries
     expect(opened?.done).toBe(true)
 
     const store = makeStore()
@@ -380,5 +383,81 @@ describe("the disk cache", () => {
     await store.settled()
     expect(run?.done && run.summary().passed).toBe(2)
     expect(ops()).toBe(listed + 1) // its plan's mtime, to know it wasn't rerun: the rest comes from the disk
-  }, 15_000)
+  })
+
+  test("a run is cached whole as it finishes: opening it again reads only its plan's mtime", async () => {
+    const dir = makeRun("local", "p", "r", 2)
+    append(dir, 0, line({ type: "start", test: ids[0] }))
+    const first = makeStore({ polling: { run: 0.001 } })
+    const run = first.run("p", "local", "r")
+    run && run.viewers++ // its page is open
+    await first.settled()
+    finishAll(dir, 0)
+    append(dir, 1, line({ type: "session_finish" }))
+    await sleep(5)
+    first.tick()
+    await first.settled()
+    expect(run?.done).toBe(true)
+    await first.stop()
+
+    const store = makeStore()
+    const again = store.run("p", "local", "r")
+    await store.settled()
+    expect(again?.summary()).toEqual(run?.summary())
+    expect(again?.changes(-1)).toEqual(run?.changes(-1))
+    const operations = store.activity.since(0).filter((entry) => entry.kind !== "sync")
+    expect(operations.map((entry) => `${entry.kind} ${entry.path}`)).toEqual([`stat ${join(dir, "plan.json")}`])
+  })
+
+  test("a run that stopped without finishing is cached too, and tailed on from where it was", async () => {
+    const dir = makeRun("local", "p", "r", 2)
+    append(dir, 0, line({ type: "start", test: ids[0] }) + line({ type: "session_finish" }))
+    append(dir, 1, line({ type: "start", test: ids[1] })) // a worker that crashed
+    const polling = { run: 0.001, slowAfter: 0.01, stopAfter: 0.02 }
+    const first = makeStore({ polling })
+    first.run("p", "local", "r")
+    await first.settled()
+    await sleep(30)
+    first.tick()
+    await first.settled()
+    await first.stop()
+
+    const store = makeStore({ polling })
+    const run = store.run("p", "local", "r")
+    await store.settled()
+    expect(run?.summary()).toMatchObject({ running: 2, done: false })
+    expect(store.polling(run as Run)).toBe("stopped")
+    const operations = () => store.activity.since(0).filter((entry) => entry.kind !== "sync")
+    expect(operations().map((entry) => `${entry.kind} ${entry.path.split("/").pop()}`)).toEqual([
+      "stat plan.json",
+      "stat status.1.jsonl", // the worker that didn't finish: still where it was
+    ])
+    const finish = line({ type: "finish", test: ids[1], outcome: "passed" })
+    append(dir, 1, finish)
+    await store.check(run as Run)
+    expect(run?.summary()).toMatchObject({ running: 1, passed: 1 })
+    expect(operations().at(-1)).toMatchObject({ kind: "read", bytes: finish.length }) // only what's new
+  })
+
+  test("runs nobody has open are checked every polling.list seconds, in the background", async () => {
+    const dir = makeRun("local", "p", "r")
+    append(dir, 0, line({ type: "start", test: ids[0] }))
+    const store = makeStore({ synced: ["p"], syncedSince: { p: 0 }, polling: { run: 0.001, list: 0.2 } })
+    for (let i = 0; i < 3; i++) {
+      store.projects() // lists the source and the project, then loads its latest run
+      await store.settled()
+    }
+    const stats = () => store.activity.since(0).filter((entry) => entry.path === join(dir, "status.0.jsonl")).length
+    const before = stats()
+    for (let i = 0; i < 10; i++) {
+      await sleep(5)
+      store.tick()
+      await store.settled()
+    }
+    expect(stats()).toBe(before) // not every `polling.run`
+    await sleep(200)
+    store.tick()
+    await store.settled()
+    expect(stats()).toBe(before + 1)
+  })
 })

@@ -43,6 +43,20 @@ export async function readMetadata(fs: Fs, dir: string): Promise<Record<string, 
 
 const isDone = (t: TestState) => t.status !== "pending" && t.status !== "running"
 
+/**
+ * A run as it was read, to cache it whole: `version` is its plan's mtime, which a rerun changes, and its status
+ * files are tailed on from where it was. `final`: it was finished, so nothing more will be written.
+ */
+export type Snapshot = {
+  version: number
+  final: boolean
+  plan: Plan
+  tests: Record<string, TestState>
+  title?: string
+  modified: number
+  workers: { offset: number; rest: string; finished: boolean }[] // `rest`: a partial line, in base64
+}
+
 /** One test run, synced incrementally: the plan is read once, status files are tailed by offset. */
 export class Run {
   plan?: Plan
@@ -67,8 +81,8 @@ export class Run {
     readonly dir: string,
     readonly project = "",
     readonly source = "",
-    /** Called once the plan's mtime is known, before the plan is read (e.g. to read it from a cache). */
-    private prepare?: (run: Run) => Promise<void>,
+    /** The run as it was cached at a version (its plan's mtime), if it was, rather than reading its files. */
+    private cached?: (version: number) => Promise<Snapshot | undefined>,
   ) {}
 
   /** When the run last showed signs of life: new status lines, or its files' modification times. */
@@ -104,27 +118,59 @@ export class Run {
     if (!this.plan) {
       this.planMtime = (await this.fs.stat(join(this.dir, "plan.json")))?.mtime
       if (this.planMtime === undefined) return
-      await this.prepare?.(this)
-      const text = await this.fs.readText(join(this.dir, "plan.json"))
-      try {
-        this.plan = normalizePlan(JSON.parse(text ?? ""))
-      } catch {
-        return // missing or still being written
-      }
-      for (const test of this.plan.tests) {
-        this.tests.set(test.id, { status: "pending", version: 0 })
-        this.index.set(test.id, test)
-      }
-      this.planVersion++
-      const metadata = await readMetadata(this.fs, this.dir)
-      this.title = typeof metadata?.name === "string" ? metadata.name : undefined
-      this.workers = Array.from({ length: this.plan.worker_count }, () => ({
-        offset: 0,
-        rest: Buffer.alloc(0),
-        finished: false,
-      }))
+      const snapshot = await this.cached?.(this.planMtime)
+      if (snapshot)
+        this.restore(snapshot) // and tail its status files on from there, if it wasn't finished
+      else if (!(await this.readPlan())) return
     }
     await Promise.all(this.workers.map((worker, index) => this.tail(worker, join(this.dir, `status.${index}.jsonl`))))
+  }
+
+  private async readPlan() {
+    const text = await this.fs.readText(join(this.dir, "plan.json"))
+    try {
+      this.plan = normalizePlan(JSON.parse(text ?? ""))
+    } catch {
+      return false // missing or still being written
+    }
+    for (const test of this.plan.tests) {
+      this.tests.set(test.id, { status: "pending", version: 0 })
+      this.index.set(test.id, test)
+    }
+    this.planVersion++
+    const metadata = await readMetadata(this.fs, this.dir)
+    this.title = typeof metadata?.name === "string" ? metadata.name : undefined
+    this.workers = Array.from({ length: this.plan.worker_count }, () => ({
+      offset: 0,
+      rest: Buffer.alloc(0),
+      finished: false,
+    }))
+    return true
+  }
+
+  private restore({ plan, tests, title, modified, workers, final }: Snapshot) {
+    this.plan = plan
+    this.title = title
+    this.modified = modified
+    for (const test of plan.tests) {
+      this.tests.set(test.id, { ...(tests[test.id] ?? { status: "pending" }), version: 1 })
+      this.index.set(test.id, test)
+    }
+    this.version = this.planVersion = 1
+    this.workers = workers.map(({ offset, rest, finished }) => ({
+      offset,
+      rest: Buffer.from(rest, "base64"),
+      finished: finished || final,
+    }))
+  }
+
+  /** What to cache of it; `final` if it's finished. */
+  snapshot(final: boolean): Snapshot | undefined {
+    if (!this.plan || this.planMtime === undefined) return undefined
+    const { plan, title, modified } = this
+    const tests = Object.fromEntries([...this.tests].map(([id, { version: _, ...test }]) => [id, test]))
+    const workers = this.workers.map((worker) => ({ ...worker, rest: worker.rest.toString("base64") }))
+    return { version: this.planMtime, final, plan, tests, title, modified, workers }
   }
 
   private async tail(worker: (typeof this.workers)[number], file: string) {
