@@ -114,6 +114,23 @@ export class DiskCache {
   saveStat = (path: string, chunk: number, value: Stat) =>
     this.write(this.file(path, chunk, "stat"), JSON.stringify(value), this.runDir(dirname(path)))
 
+  /** How many bytes the runs take. */
+  usage = () => this.used()
+
+  /** Forgets everything: runs, their summaries and run directories' mtimes. */
+  async clear() {
+    await this.evicting
+    clearTimeout(this.saving)
+    this.saving = undefined
+    this.index = { mtimes: {}, summaries: {} }
+    this.versions.clear()
+    this.frozen.clear()
+    this.touched.clear()
+    await rm(join(this.dir, "runs"), { recursive: true, force: true })
+    await rm(at(this.dir, "index.json"), { force: true })
+    this.size = Promise.resolve(0)
+  }
+
   /** Saves the index a few seconds after it changes. */
   private saveIndex() {
     this.saving ??= setTimeout(() => void this.flush(), 5000)

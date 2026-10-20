@@ -218,6 +218,17 @@ export class Store {
 
   private kept = new WeakMap<Run, number>() // the version of each run that was cached
 
+  /** Starts from scratch: the disk cache, and what's in memory (runs, listings), are forgotten. */
+  async clearCache() {
+    this.queue = []
+    this.runs.clear()
+    this.cache.clear()
+    this.kept = new WeakMap()
+    await this.disk.clear()
+    this.activity.add({ kind: "sync", path: this.disk.dir, detail: "cache cleared" })
+    this.changed.notify()
+  }
+
   /** Caches a run once it finished or stopped: whole, and its summary for lists. */
   private async keep(run: Run) {
     const final = run.settled(this.ms("slowAfter"))

@@ -298,6 +298,7 @@ The Activity page shows every filesystem operation. The rules:
   status files, nothing else. Finished runs' logs are cached too, in `filesystem.chunk` pieces, as they're read.
   Lists show cached summaries without reading anything, and a project's `metadata.toml` is read only when its
   listing shows one, and again only when that listing changes.
+  To start from a clean slate, use **Clear the cache** on the Settings page (or `curl -X DELETE <server>/api/cache`).
 - **Project pages prefetch gently**: of the runs not cached yet, only the newest `prefetch.runs` are read before
   they're opened, one run every `prefetch.interval` seconds, in the background, and only while the page is open.
   The home page reads no runs: it shows synced projects' latest runs, and what's cached of the others.

@@ -5,6 +5,8 @@ first, then updates as they happen. Runs are addressed as /api/projects/<project
 
 GET  /api/config                              the settings, and the path of the file they're saved in
 PUT  /api/config                              replaces the settings
+GET  /api/cache                               where finished runs are cached, and how many bytes they take
+DELETE /api/cache                             clears the cache (and what's in memory): a clean slate
 GET  /api/projects                            stream: every project in every source, with its latest runs
 GET  /api/projects/<project>                  stream: a project's runs, the latest summarized
 PUT  /api/projects/<project>                  {"synced": bool}

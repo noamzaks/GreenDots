@@ -20,6 +20,7 @@ import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { useState } from "react"
 import useSWR from "swr"
 import type { Config } from "@/lib/config"
+import { bytes } from "@/lib/format"
 
 type Saved = { config: Config; path: string }
 
@@ -78,6 +79,17 @@ const FIELDS: Field[] = [
 
 export default function SettingsPage() {
   const { data, mutate } = useSWR<Saved>("/api/config")
+  const cache = useSWR<{ dir: string; bytes: number }>("/api/cache")
+  const [clearing, setClearing] = useState(false)
+  const clear = async () => {
+    setClearing(true)
+    await cache
+      .mutate(
+        fetch("/api/cache", { method: "DELETE" }).then((response) => response.json()),
+        { revalidate: false },
+      )
+      .finally(() => setClearing(false))
+  }
   const [draft, setDraft] = useState<Config>()
   const [status, setStatus] = useState<{ error?: string; saved?: boolean }>({})
   useDocumentTitle("Settings · GreenDots")
@@ -208,6 +220,17 @@ export default function SettingsPage() {
             }
           />
         </SimpleGrid>
+      </Fieldset>
+      <Fieldset legend="Cache">
+        <Group justify="space-between">
+          <Text size="sm">
+            Finished runs are kept in <Code>{cache.data?.dir ?? "…"}</Code>
+            {cache.data && `, taking ${bytes(cache.data.bytes)}`}, so the share is read once for them.
+          </Text>
+          <Button variant="light" color="red" loading={clearing} onClick={clear}>
+            Clear the cache
+          </Button>
+        </Group>
       </Fieldset>
       {status.error && (
         <Alert color="red" title="Not saved">
