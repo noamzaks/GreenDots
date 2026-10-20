@@ -195,7 +195,6 @@ describe("Store", () => {
     store.setSynced("q", true)
     store.setSynced("p", false)
     expect(saved).toMatchObject({ synced: ["q"] })
-    expect(Object.keys(saved?.syncedSince ?? {})).toEqual(["q"]) // when it was synced: older runs aren't
   })
 
   test("polls a run while it changes, more slowly once it doesn't, and stops after a while", async () => {
@@ -233,7 +232,6 @@ describe("Store", () => {
 
   test("tick syncs synced projects' latest runs and nothing else", async () => {
     const store = makeStore({ synced: ["synced"], polling: { run: 0.001, list: 0.001 } })
-    await sleep(20) // past the filesystem's coarse clock: a run made after the project was synced
     const synced = makeRun("local", "synced", "r")
     makeRun("local", "other", "r")
     const tick = async () => {
@@ -256,32 +254,50 @@ describe("Store", () => {
     expect(store.fs.ops).toBe(ops)
   })
 
-  test("syncing a project syncs its new runs, not the ones it already had", async () => {
-    const old = makeRun("local", "p", "old")
-    utimesSync(old, 1, 1) // made long before the project was synced
-    let saved: Config | undefined
-    const store = makeStore({ synced: ["p"], polling: { run: 0.001, list: 0.001, browse: 0.05 } }, (config) => {
-      saved = config
-    })
-    expect(saved?.syncedSince.p).toBeGreaterThan(0) // projects synced before this was recorded: from now on
-    const tick = async () => {
-      await sleep(5)
+  test("the home page reads no runs of projects that aren't synced", async () => {
+    makeRun("local", "p", "r")
+    const store = makeStore({ prefetch: { runs: 5, interval: 0.001 } })
+    store.view("") // the home page is open
+    for (let i = 0; i < 4; i++) {
       store.tick()
-      store.projects() // the home page, which summarizes synced projects' latest runs
       await store.settled()
     }
-    await tick()
-    await tick()
-    const touched = () => store.activity.since(0).filter((entry) => entry.path?.includes(`${join("p", "old")}/`))
-    expect(touched()).toEqual([]) // not even its plan: it's read when someone opens it
-    expect(store.runInfos("p", 0, false).runs.find((run) => run.name === "old")?.summary).toBeUndefined()
-    await sleep(20) // past the filesystem's coarse clock
-    const fresh = makeRun("local", "p", "new")
-    append(fresh, 0, line({ type: "start", test: ids[0] }))
-    const running = () => store.runInfos("p", 0, false).runs.find((run) => run.name === "new")?.summary?.running
-    for (const end = Date.now() + 1000; Date.now() < end && running() !== 1; ) await tick() // within polling.browse
-    expect(running()).toBe(1)
-    expect(touched()).toEqual([])
+    const read = store.activity.since(0).filter((entry) => entry.path?.includes(`${join("p", "r")}/`))
+    expect(read).toEqual([]) // only listed (its directory stat-ed once, for sorting)
+  })
+
+  test("a synced project's 5 latest runs are kept up to date with no page open, and none of its older ones", async () => {
+    const dirs = Array.from({ length: 7 }, (_, index) => {
+      const dir = makeRun("local", "p", `r${index}`)
+      append(dir, 0, line({ type: "start", test: ids[0] }))
+      utimesSync(dir, 1000 + index, 1000 + index)
+      return dir
+    })
+    const store = makeStore({ synced: ["p"], polling: { run: 0.001, list: 0.001 } })
+    for (let i = 0; i < 4; i++) {
+      await sleep(5)
+      store.tick() // nobody looks: no page is open
+      await store.settled()
+    }
+    const running = store.runInfos("p", 0, false).runs.map((run) => [run.name, run.summary?.running])
+    expect(running).toEqual([
+      ["r6", 1],
+      ["r5", 1],
+      ["r4", 1],
+      ["r3", 1],
+      ["r2", 1],
+      ["r1", undefined],
+      ["r0", undefined],
+    ])
+    const old = store.activity
+      .since(0)
+      .filter((entry) => dirs.slice(0, 2).some((dir) => entry.path?.startsWith(`${dir}/`)))
+    expect(old).toEqual([])
+    append(dirs[6], 0, line({ type: "finish", test: ids[0], outcome: "passed" }))
+    await sleep(5)
+    store.tick()
+    await store.settled()
+    expect(store.runInfos("p", 0, false).runs[0].summary).toMatchObject({ passed: 1, running: 0 })
   })
 })
 
@@ -330,7 +346,7 @@ describe("the disk cache", () => {
       return dir
     })
   }
-  const page = (store: Store) => store.runInfos("p", 0, true, 0, store.config.prefetch.runs) // the project page
+  const page = (store: Store) => store.runInfos("p", 0, true, store.config.prefetch.runs) // the project page
   /** Keeps the project page open for `ms`: it's computed again whenever the store says something changed. */
   const browse = async (store: Store, ms: number) => {
     for (const end = Date.now() + ms; Date.now() < end; ) {
@@ -442,7 +458,7 @@ describe("the disk cache", () => {
   test("runs nobody has open are checked every polling.list seconds, in the background", async () => {
     const dir = makeRun("local", "p", "r")
     append(dir, 0, line({ type: "start", test: ids[0] }))
-    const store = makeStore({ synced: ["p"], syncedSince: { p: 0 }, polling: { run: 0.001, list: 0.2 } })
+    const store = makeStore({ synced: ["p"], polling: { run: 0.001, list: 0.2 } })
     for (let i = 0; i < 3; i++) {
       store.projects() // lists the source and the project, then loads its latest run
       await store.settled()

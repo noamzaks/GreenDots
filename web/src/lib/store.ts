@@ -49,16 +49,6 @@ export class Store {
     this.logs = new LogReader(this.files)
     void this.disk.loaded.then(() => this.changed.notify()) // to show cached summaries
     this.configure(config)
-    // projects synced before the time was recorded: from now on, so starting up reads none of their old runs
-    const unrecorded = config.synced.filter((project) => config.syncedSince[project] === undefined)
-    if (unrecorded.length)
-      this.update((config) => ({
-        ...config,
-        syncedSince: {
-          ...config.syncedSince,
-          ...Object.fromEntries(unrecorded.map((project) => [project, Date.now()])),
-        },
-      }))
   }
 
   configure(config: Config) {
@@ -283,23 +273,17 @@ export class Store {
   }
 
   /**
-   * A project's runs, newest first. The first `count` made `since` then are loaded and kept up to date; the
+   * A project's runs, newest first. The first `count` are loaded and kept up to date; the
    * others show what's known of them, in memory or cached on disk, and the first `prefetch` of them that
    * aren't known yet are summarized in the background, slowly.
    */
-  runInfos = (
-    project: string,
-    count: number,
-    touch: boolean,
-    since = 0,
-    prefetch = 0,
-  ): { runs: RunInfo[]; loading: boolean } => {
+  runInfos = (project: string, count: number, touch: boolean, prefetch = 0): { runs: RunInfo[]; loading: boolean } => {
     const { runs, loading } = this.listRuns(project)
     return {
       loading,
       runs: runs.map((info, index): RunInfo => {
         let run = this.runs.get(`${info.source}/${project}/${info.name}`)
-        if (index < count && info.mtime >= since) run = this.run(project, info.source, info.name, touch)
+        if (index < count) run = this.run(project, info.source, info.name, touch)
         else if (run && touch) run.lastAccess = Date.now()
         if (run) return { ...info, title: run.title, summary: run.plan && run.summary(), polling: this.polling(run) }
         const dir = this.runDir(info.source, project, info.name)
@@ -330,8 +314,7 @@ export class Store {
         const { project, source, name } = item
         const dir = this.runDir(source, project, name)
         const key = `${source}/${project}/${name}`
-        const shown = this.viewed(project) || this.viewed("")
-        if (!dir || !shown || this.runs.has(key) || this.disk.summary(dir)) continue
+        if (!dir || !this.viewed(project) || this.runs.has(key) || this.disk.summary(dir)) continue
         const run = this.run(project, source, name, false)
         await run?.syncing
         if (run && this.kept.has(run) && run.viewers === 0) this.runs.delete(key) // only its summary is shown
@@ -356,10 +339,8 @@ export class Store {
     }
     const projects = [...names].map((name): ProjectInfo => {
       const synced = this.config.synced.includes(name)
-      // while the home page is open, its runs are kept up to date, and each project's newest is read (then cached)
-      const prefetch = this.viewed("") ? 1 : 0
       const recent = synced ? this.config.polling.recentRuns : 0
-      const { runs } = this.runInfos(name, recent, !!prefetch, this.syncedSince(name), prefetch)
+      const { runs } = this.runInfos(name, recent, false)
       const shown = Math.max(this.config.polling.recentRuns, 3)
       return {
         name,
@@ -373,19 +354,10 @@ export class Store {
 
   setSynced(project: string, synced: boolean) {
     if (!isName(project)) return
-    this.update((config) => {
-      const { [project]: _, ...since } = config.syncedSince
-      return {
-        ...config,
-        synced: synced ? [...new Set([...config.synced, project])] : config.synced.filter((name) => name !== project),
-        syncedSince: synced ? { ...since, [project]: config.syncedSince[project] ?? Date.now() } : since,
-      }
-    })
-  }
-
-  /** Since when a synced project's runs are kept up to date: the ones it had before are read only when opened. */
-  private syncedSince(project: string) {
-    return this.config.syncedSince[project] ?? Date.now()
+    this.update((config) => ({
+      ...config,
+      synced: synced ? [...new Set([...config.synced, project])] : config.synced.filter((name) => name !== project),
+    }))
   }
 
   /** The path of a test's log, or of a worker's session log (output outside of tests). */
@@ -422,10 +394,7 @@ export class Store {
             () => !this.viewed(project),
           )
       if (!this.config.synced.includes(project)) continue
-      const since = this.syncedSince(project)
-      for (const { source, name } of runs
-        .filter((run) => run.mtime >= since)
-        .slice(0, this.config.polling.recentRuns)) {
+      for (const { source, name } of runs.slice(0, this.config.polling.recentRuns)) {
         const run = this.run(project, source, name, false)
         if (run) synced.add(run)
       }
