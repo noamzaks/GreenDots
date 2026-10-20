@@ -77,7 +77,7 @@ user can write runs to), `python3-pytest-greendots`, the plugin, `python3-greend
 
 ```bash
 packaging/fedora/build.sh
-sudo dnf install packaging/fedora/rpms/*.$(arch).rpm packaging/fedora/rpms/*.noarch.rpm
+sudo dnf install packaging/fedora/rpms/*.rpm   # upgrading later: the same, with `upgrade`
 sudo systemctl enable --now greendots
 sudo firewall-cmd --reload && sudo firewall-cmd --permanent --add-service=greendots && sudo firewall-cmd --reload   # if needed
 ```

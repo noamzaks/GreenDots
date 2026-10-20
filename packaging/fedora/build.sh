@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Builds the GreenDots RPMs in a Fedora container into packaging/fedora/rpms/ (FEDORA=44 by default).
+# Builds the GreenDots RPMs in a Fedora container (FEDORA=44 by default) into packaging/fedora/rpms/, which then
+# holds only this build's packages, so `sudo dnf install rpms/*.rpm` installs it (its source package is in rpms/src/).
 set -euo pipefail
 here=$(dirname "$(realpath "$0")")
 root=$(realpath "$here/../..")
@@ -11,7 +12,7 @@ trap 'rm -rf "$work"' EXIT
 git -C "$root" ls-files -co --exclude-standard -z | tar -C "$root" --null -T - -czf "$work/greendots.tar.gz"
 cp "$here/greendots.spec" "$work/"
 commits=$(git -C "$root" rev-list --count HEAD)
-mkdir -p "$out"
+mkdir -p "$out/src"
 
 podman run --rm --security-opt label=disable -v "$work:/work" -v "$out:/out" \
   "registry.fedoraproject.org/fedora:${FEDORA:-44}" bash -euxc "
@@ -25,6 +26,8 @@ podman run --rm --security-opt label=disable -v "$work:/work" -v "$out:/out" \
       rm -f /work/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
     done
     rpmbuild \"\${define[@]}\" -ba /work/greendots.spec
-    cp /work/rpmbuild/RPMS/*/*.rpm /work/rpmbuild/SRPMS/*.src.rpm /out/
+    rm -f /out/*.rpm /out/src/*.rpm
+    cp /work/rpmbuild/RPMS/*/*.rpm /out/
+    cp /work/rpmbuild/SRPMS/*.src.rpm /out/src/
   "
 find "$out" -name '*.rpm'
