@@ -1,6 +1,7 @@
-import { Box, Button, Divider, Group, Highlight, Text } from "@mantine/core"
+import { Box, Button, Divider, Group, Text } from "@mantine/core"
 import dayjs from "dayjs"
 import { memo } from "react"
+import { Ansi } from "@/components/Ansi"
 import { bytes } from "@/lib/format"
 import { clock } from "@/lib/time"
 import type { LogLine as Line } from "@/lib/types"
@@ -64,9 +65,9 @@ export const LogLine = memo(function LogLine({
             : undefined
         }
       >
-        <Highlight span fz={12} ff="monospace" highlight={search}>
-          {line.message}
-        </Highlight>
+        <Text span fz={12} ff="monospace">
+          <Ansi text={line.message} search={search} />
+        </Text>
       </Box>
       {line.truncated && (
         <Button size="compact-xs" variant="light" mt={2} onClick={() => onExpand(line)}>
