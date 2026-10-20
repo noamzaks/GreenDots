@@ -11,8 +11,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/projects
     try {
       await watch(signal, send, (): ProjectRuns => {
         const { config, projectTitle, runInfos } = store()
-        // cached summaries, and a few prefetched slowly: not every run on the page is read
-        const { runs, loading } = runInfos(project, 0, true, config.prefetch.runs)
+        // what's known of its runs: synced ones are kept up to date, the others are read when opened
+        const { runs, loading } = runInfos(project, 0, true)
         return { name: project, title: projectTitle(project), synced: config.synced.includes(project), runs, loading }
       })
     } finally {
