@@ -298,8 +298,9 @@ The Activity page shows every filesystem operation. The rules:
   status files, nothing else. Finished runs' logs are cached too, in `filesystem.chunk` pieces, as they're read.
   Lists show cached summaries without reading anything, and a project's `metadata.toml` is read only when its
   listing shows one, and again only when that listing changes.
-- **Project pages prefetch gently**: of the runs not cached yet, only the newest `prefetch.runs` are read before
-  they're opened, one run every `prefetch.interval` seconds, and only while the page is open.
+- **Pages prefetch gently**: of the runs not cached yet, a project page reads its newest `prefetch.runs` and the home
+  page each project's newest, one run every `prefetch.interval` seconds, in the background, and only while the
+  page is open.
 - **A run's `plan.json` is read once.** Status files are tailed by byte offset: one `stat` per worker per check,
   and a read of only the new bytes when a file grew. Workers that finished are never read again, nor are finished
   runs.

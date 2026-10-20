@@ -40,13 +40,13 @@ function ProjectCard({ project }: { project: ProjectInfo }) {
               <Text size="xs" c="dimmed" hiddenFrom="xs">
                 {ago(run.summary?.started ?? run.mtime / 1000)}
               </Text>
+              {run.summary && <RunBar summary={run.summary} size="xs" />}
             </Stack>
-            {run.summary && <RunBar summary={run.summary} />}
             <Text
               size="xs"
               c="dimmed"
               ta="right"
-              w={105}
+              miw={70}
               visibleFrom="xs"
               style={{ flexShrink: 0, whiteSpace: "nowrap" }}
             >

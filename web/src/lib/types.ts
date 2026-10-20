@@ -7,7 +7,7 @@ export type PlanTest = {
   name: string
   module: string
   params: Record<string, Param>
-  log: string
+  log?: string // its log file, in the run's directory (not sent to browsers)
   keywords?: string[] // what pytest -k matches besides the names in the id (markers...), from newer plugins
 }
 export type Plan = {

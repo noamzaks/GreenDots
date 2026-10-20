@@ -17,14 +17,24 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/projects
   return eventStream(request, async (send, signal) => {
     run.viewers++
     try {
+      // once its test (or run) is over, nothing more is written: a last line without a newline is complete
+      const final = () => (state() ? isOver(state()?.status) : run.done)
       let size = await s.logSize(path)
       const tail = await s.logs.before(path, size)
-      let end = tail.end
-      send({ ...tail, size, test: state(), full: true } satisfies LogUpdate)
+      const last = final() && tail.end < size ? await s.logs.forward(path, tail.end, size, true) : undefined
+      let end = last?.end ?? tail.end
+      send({
+        ...tail,
+        lines: [...tail.lines, ...(last?.lines ?? [])],
+        end,
+        size,
+        test: state(),
+        full: true,
+      } satisfies LogUpdate)
       let quiet = 0 // checks without growth since the test (or run) was over
       let sent = JSON.stringify(state())
       while (!signal.aborted) {
-        const over = state() ? isOver(state()?.status) : run.done
+        const over = final()
         const following = quiet < 3 && s.polling(run) !== "stopped"
         await s.changed.wait(following ? s.config.polling.run * 1000 : 25_000, signal)
         if (signal.aborted) break
@@ -35,7 +45,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/projects
         }
         const test = JSON.stringify(state())
         if (size <= end && test === sent) continue
-        const chunk = size > end ? await s.logs.forward(path, end, size) : { lines: [], end }
+        const chunk = size > end ? await s.logs.forward(path, end, size, over) : { lines: [], end }
         send({ ...chunk, start: end, size, test: state(), full: false } satisfies LogUpdate)
         end = chunk.end
         sent = test

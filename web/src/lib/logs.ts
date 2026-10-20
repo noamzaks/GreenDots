@@ -129,8 +129,11 @@ export class LogReader {
     return undefined
   }
 
-  /** Complete lines from `from` (a line start) on, about `window` bytes of them, but not past `until`. */
-  async forward(path: string, from: number, until: number): Promise<{ lines: LogLine[]; end: number }> {
+  /**
+   * Complete lines from `from` (a line start) on, about `window` bytes of them, but not past `until`. When the log
+   * is `final` (nothing more will be written), a last line without a newline is complete too.
+   */
+  async forward(path: string, from: number, until: number, final = false): Promise<{ lines: LogLine[]; end: number }> {
     const lines: LogLine[] = []
     let position = from
     while (position < until && position - from < this.window) {
@@ -141,10 +144,17 @@ export class LogReader {
         position += complete
         continue
       }
-      // no newline in a whole window: a huge line (or one still being written)
-      const end = bytes.length < this.window ? undefined : await this.lineEnd(path, position, until)
+      // no newline in a whole window: a huge line, or one still being written (unless the log is final)
+      const end =
+        (bytes.length < this.window ? undefined : await this.lineEnd(path, position, until)) ??
+        (final ? until : undefined)
       if (end === undefined) break
-      lines.push(preview(bytes.subarray(0, this.preview), position, end - position))
+      const whole = end - position <= bytes.length && bytes.length <= this.preview
+      lines.push(
+        whole
+          ? { ...parseLine(bytes, position, this.preview), length: end - position }
+          : preview(bytes.subarray(0, this.preview), position, end - position),
+      )
       position = end
     }
     return { lines, end: position }

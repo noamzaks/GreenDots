@@ -61,7 +61,7 @@ export type Snapshot = {
 export class Run {
   plan?: Plan
   readonly epoch = Math.random().toString(36).slice(2)
-  readonly created = Date.now()
+  created = Date.now() // or its directory's mtime: when it last showed signs of life before it had a plan
   version = 0
   planVersion = 0
   title?: string
@@ -69,6 +69,7 @@ export class Run {
   lastSync = 0
   lastAccess = Date.now()
   viewers = 0 // open streams showing this run
+  full?: { key: string; json: unknown } // its whole state as sent to browsers, for the version in `key`
   planMtime?: number
   modified = 0 // the latest modification time of a status file
   private tests = new Map<string, TestState & { version: number }>()
