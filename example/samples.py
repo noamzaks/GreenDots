@@ -197,6 +197,16 @@ def logs(root: Path) -> None:
     files[2].write_text("plain text, not JSON\n\x1b[31mcolored\x1b[0m\n" + "no newline at the end")
     files[3].write_bytes(bytes(range(256)) * 100)
     files[4].write_text("")
+    with files[5].open("w") as file:  # a colored terminal's output, like pytest's
+        for message in [
+            "\x1b[1m============ test session starts ============\x1b[0m",
+            "tests/test_boot.py \x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[33ms\x1b[0m",
+            "\x1b[31m\x1b[1mFAILED\x1b[0m tests/test_boot.py::test_edge - \x1b[1;31mAssertionError\x1b[0m",
+            "\x1b[38;5;208m256 colors\x1b[0m and \x1b[38;2;120;80;220mtrue color\x1b[0m, \x1b[4munderlined\x1b[0m",
+            "\x1b[2mdim\x1b[0m \x1b[3mitalic\x1b[0m \x1b[42;30m on green \x1b[0m\x1b[K",
+            "\x1b[31m\x1b[1m===== 1 failed, \x1b[32m2 passed\x1b[31m, \x1b[33m1 skipped\x1b[31m in 0.12s =====\x1b[0m",
+        ]:
+            file.write(line(name="pytest", level="INFO", time=NOW, message=message))
     print("logs: 1 run")
 
 

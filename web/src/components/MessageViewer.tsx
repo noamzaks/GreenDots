@@ -4,6 +4,7 @@ import { Box, Button, CopyButton, Group, Loader, Modal, Progress, Text } from "@
 import { IconCheck, IconCopy, IconDownload } from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
 import { Virtuoso } from "react-virtuoso"
+import { Ansi } from "@/components/Ansi"
 import { fetcher } from "@/lib/client"
 import { bytes } from "@/lib/format"
 import type { MessageChunk } from "@/lib/types"
@@ -128,7 +129,7 @@ function Message({ url }: { url: string }) {
               }}
             >
               <Text ff="monospace" fz="xs" style={{ whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-                {row.text || " "}
+                {row.text ? <Ansi text={row.text} /> : " "}
               </Text>
             </Box>
           )}

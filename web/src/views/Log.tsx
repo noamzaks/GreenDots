@@ -27,6 +27,7 @@ import { FailureNavigation } from "@/components/FailureNavigation"
 import { LEVELS, LogLine as Line } from "@/components/LogLine"
 import { MessageViewer } from "@/components/MessageViewer"
 import { Traceback } from "@/components/Traceback"
+import { plain } from "@/lib/ansi"
 import { apis, COLORS, type LogTarget, pages, type RunRef, useLog } from "@/lib/client"
 import { useQueryParam, useRunRef } from "@/lib/router"
 import { clock } from "@/lib/time"
@@ -82,7 +83,7 @@ function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
       (line) =>
         !levels.has(line.level) &&
         !loggers.has(line.name) &&
-        (!query || line.message.toLowerCase().includes(query) || line.name.toLowerCase().includes(query)),
+        (!query || plain(line.message).toLowerCase().includes(query) || line.name.toLowerCase().includes(query)),
     )
   }, [log.lines, hiddenLevels, hiddenLoggers, debouncedSearch])
   const older = shown.findIndex((line) => line.offset >= log.tailStart)
