@@ -28,6 +28,6 @@ const env = {
   // filesystem calls run on libuv's thread pool: a slow share must not take all of its (default 4) threads
   UV_THREADPOOL_SIZE: process.env.UV_THREADPOOL_SIZE ?? "64",
 }
-spawn(process.execPath, [join(app, "server.js")], { cwd: app, env, stdio: "inherit" }).on("exit", (code) =>
-  process.exit(code ?? 0),
-)
+const child = spawn(process.execPath, [join(app, "server.js")], { cwd: app, env, stdio: "inherit" })
+child.on("exit", (code) => process.exit(code ?? 0))
+for (const signal of ["SIGTERM", "SIGINT"]) process.on(signal, () => child.kill(signal)) // it stops right away

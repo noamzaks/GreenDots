@@ -482,6 +482,12 @@ export class Store {
 
 const global = globalThis as { greendots?: Store }
 export const store = () => {
-  global.greendots ??= new Store(loadConfig(), saveConfig)
+  if (!global.greendots) {
+    const store = new Store(loadConfig(), saveConfig)
+    global.greendots = store
+    // open event streams never end, so don't wait for them (as Next does) when asked to stop: e.g. by systemd
+    for (const signal of ["SIGTERM", "SIGINT"])
+      process.once(signal, () => void store.stop().finally(() => process.exit(0)))
+  }
   return global.greendots
 }
