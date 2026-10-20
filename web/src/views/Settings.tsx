@@ -26,7 +26,7 @@ type Saved = { config: Config; path: string }
 
 /** A numeric setting: `section.key`, with a label, unit and help text. */
 type Field = {
-  section: "polling" | "filesystem" | "logs" | "server" | "cache" | "prefetch"
+  section: "polling" | "filesystem" | "logs" | "server" | "cache"
   key: string
   label: string
   unit: string
@@ -53,18 +53,10 @@ const FIELDS: Field[] = [
     key: "rate",
     label: "Background operations a second, at most",
     unit: "",
-    help: "Prefetching, and runs nobody has open: one at a time, after the rest (0: no limit)",
+    help: "Keeping synced runs nobody has open up to date: one at a time, after the rest (0: no limit)",
   },
   { section: "filesystem", key: "timeout", label: "Give up on an operation after", unit: "s" },
   { section: "filesystem", key: "chunk", label: "Read files in pieces of", unit: "KB" },
-  {
-    section: "prefetch",
-    key: "runs",
-    label: "Summarize a viewed project's newest runs before they're opened",
-    unit: "",
-    help: "Those that aren't cached yet",
-  },
-  { section: "prefetch", key: "interval", label: "... one every", unit: "s" },
   {
     section: "cache",
     key: "size",

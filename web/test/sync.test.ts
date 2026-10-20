@@ -256,7 +256,7 @@ describe("Store", () => {
 
   test("the home page reads no runs of projects that aren't synced", async () => {
     makeRun("local", "p", "r")
-    const store = makeStore({ prefetch: { runs: 5, interval: 0.001 } })
+    const store = makeStore()
     store.view("") // the home page is open
     for (let i = 0; i < 4; i++) {
       store.tick()
@@ -346,7 +346,7 @@ describe("the disk cache", () => {
       return dir
     })
   }
-  const page = (store: Store) => store.runInfos("p", 0, true, store.config.prefetch.runs) // the project page
+  const page = (store: Store) => store.runInfos("p", 0, true) // the project page
   /** Keeps the project page open for `ms`: it's computed again whenever the store says something changed. */
   const browse = async (store: Store, ms: number) => {
     for (const end = Date.now() + ms; Date.now() < end; ) {
@@ -357,26 +357,27 @@ describe("the disk cache", () => {
     return page(store)
   }
 
-  test("a project page prefetches a few runs, one at a time, and keeps only their summaries", async () => {
-    finishedRuns(10)
-    const store = makeStore({ prefetch: { runs: 3, interval: 0.05 } })
-    const unview = store.view("p")
-    const summarized = (await browse(store, 400)).runs.filter((run) => run.summary)
-    expect(summarized.map((run) => run.name)).toEqual(["r9", "r8", "r7"]) // the newest 3, not all 10
-    expect(summarized.every((run) => run.polling === "done" && run.summary?.passed === 2)).toBe(true)
-    const prefetched = store.activity.since(0).filter((entry) => entry.detail?.startsWith("prefetched"))
-    expect(prefetched).toHaveLength(3)
-    expect(prefetched[2].time - prefetched[0].time).toBeGreaterThanOrEqual(90) // 0.05s apart
-    expect(store.loaded).toBe(0) // finished: only their summaries are kept, on disk
-    unview()
+  test("a project page reads none of its runs unless the project is synced", async () => {
+    finishedRuns(3)
+    const store = makeStore()
+    store.view("p")
+    const { runs } = await browse(store, 200)
+    expect(runs.map((run) => run.name)).toEqual(["r2", "r1", "r0"])
+    expect(runs.every((run) => !run.summary)).toBe(true)
+    expect(
+      store.activity.since(0).filter((entry) => entry.path?.includes(`${join("p", "r")}`) && entry.kind !== "stat"),
+    ).toEqual([])
+    expect(store.loaded).toBe(0)
   })
 
   test("after a restart, lists come from the cache and finished runs are read from the disk", async () => {
     const [newest] = finishedRuns(3).reverse()
-    const first = makeStore({ prefetch: { runs: 3, interval: 0.01 } })
+    const first = makeStore()
     const unview = first.view("p")
-    await browse(first, 300)
-    const opened = first.run("p", "local", "r2")
+    await browse(first, 100)
+    const opened = first.run("p", "local", "r2") // each run opened once
+    first.run("p", "local", "r1")
+    first.run("p", "local", "r0")
     await first.settled()
     await first.logs.before(join(newest, `${ids[0]}.log.jsonl`), 0) // a log read through the cache
     unview()

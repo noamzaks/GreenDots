@@ -20,7 +20,7 @@ type Entry = { at: number; value?: unknown; error?: string; loading?: Promise<vo
  * - only what someone looks at (an open stream) or syncs (the latest runs of synced projects) is read;
  * - runs are polled while they change, more slowly once they don't, and not at all after a while;
  * - finished runs are cached on disk, whole;
- * - what nobody waits for (prefetching, runs that aren't open) is read in the background, after the rest.
+ * - what nobody waits for (synced runs nobody has open) is read in the background, after the rest.
  */
 export class Store {
   readonly changed = new Signal() // something clients may be waiting for changed
@@ -33,8 +33,6 @@ export class Store {
   private viewers = new Map<string, number>() // open streams, by project ("" for the projects list)
   private cache = new Map<string, Entry>()
   private syncs = new Set<Promise<void>>() // syncs and what follows them (caching runs that finished)
-  private queue: { project: string; source: string; name: string }[] = [] // runs to prefetch, one at a time
-  private prefetching = false
   private timer?: ReturnType<typeof setTimeout>
 
   constructor(
@@ -220,7 +218,6 @@ export class Store {
 
   /** Starts from scratch: the disk cache, and what's in memory (runs, listings), are forgotten. */
   async clearCache() {
-    this.queue = []
     this.runs.clear()
     this.cache.clear()
     this.kept = new WeakMap()
@@ -284,11 +281,10 @@ export class Store {
   }
 
   /**
-   * A project's runs, newest first. The first `count` are loaded and kept up to date; the
-   * others show what's known of them, in memory or cached on disk, and the first `prefetch` of them that
-   * aren't known yet are summarized in the background, slowly.
+   * A project's runs, newest first. The first `count` are loaded and kept up to date; the others show what's
+   * known of them (in memory, or cached on disk), without reading them.
    */
-  runInfos = (project: string, count: number, touch: boolean, prefetch = 0): { runs: RunInfo[]; loading: boolean } => {
+  runInfos = (project: string, count: number, touch: boolean): { runs: RunInfo[]; loading: boolean } => {
     const { runs, loading } = this.listRuns(project)
     return {
       loading,
@@ -299,41 +295,9 @@ export class Store {
         if (run) return { ...info, title: run.title, summary: run.plan && run.summary(), polling: this.polling(run) }
         const dir = this.runDir(info.source, project, info.name)
         const cached = dir === undefined ? undefined : this.disk.summary(dir)
-        if (!cached && index < prefetch) this.prefetch(project, info.source, info.name)
         const polling = cached && (cached.summary.done ? "done" : "stopped")
         return { ...info, title: cached?.title, summary: cached?.summary, polling }
       }),
-    }
-  }
-
-  /** Queues a run to be summarized in the background, unless nobody looks at its project by its turn. */
-  private prefetch(project: string, source: string, name: string) {
-    if (this.queue.some((q) => q.project === project && q.source === source && q.name === name)) return
-    this.queue.push({ project, source, name })
-    if (!this.prefetching) void this.drain()
-  }
-
-  /**
-   * Reads the queued runs in the background, one at a time and `prefetch.interval` apart, so a project page can't
-   * flood a share. A finished one is cached on disk and dropped from memory; one in progress is kept up to date.
-   */
-  private async drain() {
-    this.prefetching = true
-    try {
-      await this.disk.loaded
-      for (let item = this.queue.shift(); item; item = this.queue.shift()) {
-        const { project, source, name } = item
-        const dir = this.runDir(source, project, name)
-        const key = `${source}/${project}/${name}`
-        if (!dir || !this.viewed(project) || this.runs.has(key) || this.disk.summary(dir)) continue
-        const run = this.run(project, source, name, false)
-        await run?.syncing
-        if (run && this.kept.has(run) && run.viewers === 0) this.runs.delete(key) // only its summary is shown
-        this.activity.add({ kind: "sync", path: dir, detail: `prefetched${run?.done ? ", done" : ""}` })
-        await new Promise((resolve) => setTimeout(resolve, this.config.prefetch.interval * 1000))
-      }
-    } finally {
-      this.prefetching = false
     }
   }
 

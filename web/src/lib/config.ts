@@ -32,7 +32,7 @@ export const Config = z.object({
     .object({
       /** Operations on the sources at a time... */
       concurrency: z.number().int().min(1).default(8),
-      /** ... and background ones (prefetching, runs nobody has open) a second, at most (0: no limit). */
+      /** ... and background ones (synced runs nobody has open) a second, at most (0: no limit). */
       rate: z.number().min(0).default(20),
       /** Operations taking longer fail (the share may be unreachable). */
       timeout: seconds(30),
@@ -46,14 +46,6 @@ export const Config = z.object({
       dir: z.string().default(""),
       /** At most this many MB: the runs used least recently go first. */
       size: z.number().int().min(16).default(2048),
-    })
-    .prefault({}),
-  prefetch: z
-    .object({
-      /** How many of a viewed project's newest runs are summarized before they're opened (if not cached)... */
-      runs: z.number().int().min(0).default(5),
-      /** ... one every this many seconds. */
-      interval: seconds(2),
     })
     .prefault({}),
   logs: z

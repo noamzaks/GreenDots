@@ -123,7 +123,6 @@ Every key is optional:
   "filesystem": { "concurrency": 8, "rate": 20, "timeout": 30, "chunk": 1024 },
   "logs": { "window": 256, "preview": 16 },
   "cache": { "dir": "", "size": 2048 },
-  "prefetch": { "runs": 5, "interval": 2 },
   "activity": 5000
 }
 ```
@@ -299,9 +298,8 @@ The Activity page shows every filesystem operation. The rules:
   Lists show cached summaries without reading anything, and a project's `metadata.toml` is read only when its
   listing shows one, and again only when that listing changes.
   To start from a clean slate, use **Clear the cache** on the Settings page (or `curl -X DELETE <server>/api/cache`).
-- **Project pages prefetch gently**: of the runs not cached yet, only the newest `prefetch.runs` are read before
-  they're opened, one run every `prefetch.interval` seconds, in the background, and only while the page is open.
-  The home page reads no runs: it shows synced projects' latest runs, and what's cached of the others.
+- **Runs are read when they're opened**, or kept up to date when their project is synced; lists show what's known
+  of the others (cached when they were last opened), without reading them.
 - **A run's `plan.json` is read once.** Status files are tailed by byte offset: one `stat` per worker per check,
   and a read of only the new bytes when a file grew. Workers that finished are never read again, nor are finished
   runs.
@@ -311,7 +309,7 @@ The Activity page shows every filesystem operation. The rules:
   offers to check again.
 - **A followed log is `stat`-ed at most once per check**, however many tabs follow it, and not anymore once its test
   is over and it stopped growing. Logs are read in `logs.window` KB pieces.
-- **What you look at goes first**: background work (prefetching, runs nobody has open) waits for every other
+- **What you look at goes first**: background work (synced runs nobody has open) waits for every other
   operation, and goes one operation at a time, at most `filesystem.rate` a second.
 - **Slow or unreachable shares don't hang the app**: at most `filesystem.concurrency` operations run at a time,
   callers give up after `filesystem.timeout` seconds (per operation: files are read in `filesystem.chunk` KB

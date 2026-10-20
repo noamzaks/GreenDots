@@ -24,7 +24,7 @@ export type FsOptions = {
 const lane = new AsyncLocalStorage<() => boolean>()
 
 /**
- * Runs `work` in the background (e.g. prefetching, or keeping runs nobody has open up to date): its operations
+ * Runs `work` in the background (e.g. keeping synced runs nobody has open up to date): its operations
  * wait for the ones someone is waiting for. `still` says whether it's still in the background: once a run is
  * opened, what's left of reading it isn't kept waiting.
  */
