@@ -425,6 +425,23 @@ describe("the disk cache", () => {
     expect(operations.map((entry) => `${entry.kind} ${entry.path}`)).toEqual([`stat ${join(dir, "plan.json")}`])
   })
 
+  test("clearing the cache starts from scratch: a finished run is read from the share again", async () => {
+    const dir = makeRun("local", "p", "r")
+    finishAll(dir)
+    const store = makeStore()
+    store.run("p", "local", "r")
+    await store.settled()
+    expect(await store.disk.usage()).toBeGreaterThan(0)
+    await store.clearCache()
+    expect(await store.disk.usage()).toBe(0)
+    const ops = store.fs.ops
+    expect(store.loaded).toBe(0)
+    const run = store.run("p", "local", "r")
+    await store.settled()
+    expect(run?.summary()).toMatchObject({ passed: 2, done: true })
+    expect(store.fs.ops - ops).toBeGreaterThan(1) // its plan and status file, not just its plan's mtime
+  })
+
   test("a run that stopped without finishing is cached too, and tailed on from where it was", async () => {
     const dir = makeRun("local", "p", "r", 2)
     append(dir, 0, line({ type: "start", test: ids[0] }) + line({ type: "session_finish" }))
