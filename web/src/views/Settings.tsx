@@ -50,9 +50,9 @@ const FIELDS: Field[] = [
   {
     section: "filesystem",
     key: "rate",
-    label: "... and a second, at most",
+    label: "Background operations a second, at most",
     unit: "",
-    help: "Stats, reads and listings of the sources (0: no limit)",
+    help: "Prefetching, and runs nobody has open: one at a time, after the rest (0: no limit)",
   },
   { section: "filesystem", key: "timeout", label: "Give up on an operation after", unit: "s" },
   { section: "filesystem", key: "chunk", label: "Read files in pieces of", unit: "KB" },
@@ -188,7 +188,7 @@ export default function SettingsPage() {
           />
           <TextInput
             label="Cache directory"
-            description="Where finished runs' files and summaries are kept"
+            description="Where finished runs are kept; takes effect when the server restarts"
             placeholder="~/.cache/greendots"
             value={config.cache.dir}
             onChange={(event) =>

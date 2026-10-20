@@ -34,7 +34,7 @@ export const Config = z.object({
     .object({
       /** Operations on the sources at a time... */
       concurrency: z.number().int().min(1).default(8),
-      /** ... and a second, at most (0: no limit). */
+      /** ... and background ones (prefetching, runs nobody has open) a second, at most (0: no limit). */
       rate: z.number().min(0).default(20),
       /** Operations taking longer fail (the share may be unreachable). */
       timeout: seconds(30),
@@ -44,7 +44,7 @@ export const Config = z.object({
     .prefault({}),
   cache: z
     .object({
-      /** Where finished runs' files and summaries are kept, so the share is read once for them ("": ~/.cache/greendots). */
+      /** Where finished runs are kept, so the share is read once for them ("": ~/.cache/greendots; read at startup). */
       dir: z.string().default(""),
       /** At most this many MB: the runs used least recently go first. */
       size: z.number().int().min(16).default(2048),

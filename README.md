@@ -292,24 +292,25 @@ The Activity page shows every filesystem operation. The rules:
 - **Listings come from a cache** and are refreshed in the background: every `polling.list` seconds for projects
   being viewed or with runs in progress, every `polling.browse` for the rest. Each run directory is `stat`-ed once,
   ever: its mtime is kept in the disk cache.
-- **Finished runs are read from the share once.** Their files (plan, status files and logs, in `filesystem.chunk`
-  pieces, as they're read) and summary are kept on disk, in `cache.dir` (default: `~/.cache/greendots`), up to
-  `cache.size` MB, the runs used least recently going first. A finished run's files only change if it's rerun into the
-  same directory, which rewrites its plan: opening it checks the plan's mtime, nothing else, and lists show its
-  cached summary without reading anything.
-- **Project pages prefetch gently**: of the runs not cached yet, only the newest `prefetch.runs` are summarized before
-  they're opened, one run every `prefetch.interval` seconds, and only while the page is open. A finished run's
-  summary is all that's kept of it, so browsing doesn't fill the memory.
+- **Runs are read from the share once.** A run that finished or stopped is kept on disk whole, in `cache.dir`
+  (default: `~/.cache/greendots`), up to `cache.size` MB, the runs used least recently going first, with how far
+  each status file was read. Opening it again `stat`s its plan (a rerun rewrites it) and its unfinished workers'
+  status files, nothing else. Finished runs' logs are cached too, in `filesystem.chunk` pieces, as they're read.
+  Lists show cached summaries without reading anything, and a project's `metadata.toml` is read only when its
+  listing shows one, and again only when that listing changes.
+- **Project pages prefetch gently**: of the runs not cached yet, only the newest `prefetch.runs` are read before
+  they're opened, one run every `prefetch.interval` seconds, and only while the page is open.
 - **A run's `plan.json` is read once.** Status files are tailed by byte offset: one `stat` per worker per check,
   and a read of only the new bytes when a file grew. Workers that finished are never read again, nor are finished
   runs.
-- **Runs are checked every `polling.run` seconds while they change**, every `polling.slowRun` once they haven't
+- **Open runs are checked every `polling.run` seconds while they change** (runs only listed or synced every
+  `polling.list`), every `polling.slowRun` once they haven't
   changed for `polling.slowAfter`, and **not at all after `polling.stopAfter`** (e.g. a crashed run). Its page then
   offers to check again.
 - **A followed log is `stat`-ed at most once per check**, however many tabs follow it, and not anymore once its test
   is over and it stopped growing. Logs are read in `logs.window` KB pieces.
-- **The share is never flooded**: at most `filesystem.rate` operations a second (`stat`s, reads and listings), and
-  `filesystem.concurrency` at a time.
+- **What you look at goes first**: background work (prefetching, runs nobody has open) waits for every other
+  operation, and goes one operation at a time, at most `filesystem.rate` a second.
 - **Slow or unreachable shares don't hang the app**: at most `filesystem.concurrency` operations run at a time,
   callers give up after `filesystem.timeout` seconds (per operation: files are read in `filesystem.chunk` KB
   pieces, so big plans, status files and logs load however slow the share is), pages show what's known while the
