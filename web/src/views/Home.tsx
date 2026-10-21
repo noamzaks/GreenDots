@@ -65,7 +65,7 @@ function ProjectCard({ project }: { project: ProjectInfo }) {
 }
 
 export default function Home() {
-  const { data, error } = useStream<Projects>("/api/projects")
+  const { data, error, refreshing } = useStream<Projects>("/api/projects")
   const [search, setSearch] = useState("")
   const [pins] = usePins()
   useDocumentTitle("GreenDots")
@@ -102,7 +102,7 @@ export default function Home() {
           {error}
         </Alert>
       ))}
-      {(!data || data.loading) && <Loader size="sm" />}
+      {(!data || data.loading || refreshing) && <Loader size="sm" />}
       {data && !data.loading && !data.projects.length && (
         <Text c="dimmed">
           No projects yet. Add the directories your tests write to on the{" "}

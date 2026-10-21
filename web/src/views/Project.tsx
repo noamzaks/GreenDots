@@ -18,7 +18,7 @@ const number = { fontVariantNumeric: "tabular-nums", textAlign: "right" } as con
 export default function ProjectPage() {
   const project = useParam("project")
   const [, navigate] = useLocation()
-  const { data, error } = useStream<ProjectRuns>(apis.project(project))
+  const { data, error, refreshing } = useStream<ProjectRuns>(apis.project(project))
   useDocumentTitle(`${data?.title ?? project} · GreenDots`)
   useTitle(pages.project(project), data?.title)
   const { count, sentinel } = useProgressive(data?.runs.length ?? 0)
@@ -28,7 +28,7 @@ export default function ProjectPage() {
       <Group gap="sm">
         <Title order={2}>{data.title ?? project}</Title>
         <ProjectActions project={project} synced={data.synced} />
-        {data.loading && <Loader size="xs" />}
+        {(data.loading || refreshing) && <Loader size="xs" />}
       </Group>
       {!data.loading && data.runs.length === 0 && <Text c="dimmed">No runs yet.</Text>}
       <Table highlightOnHover verticalSpacing="xs">

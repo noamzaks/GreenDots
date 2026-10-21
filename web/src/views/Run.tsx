@@ -67,10 +67,10 @@ function RunView(ref: RunRef) {
   const { project, source, run } = ref
   const [, navigate] = useLocation()
   const [notify, toggleNotify] = useNotificationsSetting()
-  const { plan, tests, summary, title, polling, error, waiting } = useRun(ref, notify)
+  const { plan, tests, summary, title, polling, error, waiting, refreshing } = useRun(ref, notify)
   useDocumentTitle(`${title ?? run} (${source}) · ${project} · GreenDots`)
   useTitle(pages.run(ref), title)
-  useRunAlerts(ref, summary, notify)
+  useRunAlerts(ref, refreshing ? undefined : summary, notify) // changes seen live only
   const [q, setQuery] = useQueryParam("q")
   const query = q ?? ""
   const [errorsParam, setErrorsParam] = useQueryParam("errors")
@@ -195,6 +195,7 @@ function RunView(ref: RunRef) {
           <Text size="sm" c="dimmed">
             {subtitle.join(" · ")}
           </Text>
+          {refreshing && <Loader size="xs" style={{ alignSelf: "center" }} />}
           {polling === "stopped" && (
             <Tooltip label="It may have stopped (e.g. crashed) without finishing. It isn't checked anymore, to spare the share.">
               <Badge color="yellow" variant="light">

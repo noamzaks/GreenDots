@@ -19,19 +19,28 @@ import {
   Tooltip,
 } from "@mantine/core"
 import { useDebouncedValue, useDocumentTitle, useHotkeys, useLocalStorage, useMediaQuery } from "@mantine/hooks"
-import { IconArrowDown, IconCheck, IconCopy, IconSearch, IconUsers } from "@tabler/icons-react"
+import {
+  IconArrowDown,
+  IconCheck,
+  IconClock,
+  IconCopy,
+  IconPlayerSkipForward,
+  IconSearch,
+  IconUsers,
+  IconX,
+} from "@tabler/icons-react"
+import confetti from "canvas-confetti"
 import dayjs from "dayjs"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import { FailureNavigation } from "@/components/FailureNavigation"
 import { LEVELS, LogLine as Line } from "@/components/LogLine"
 import { MessageViewer } from "@/components/MessageViewer"
-import { Traceback } from "@/components/Traceback"
 import { plain } from "@/lib/ansi"
 import { apis, COLORS, type LogTarget, pages, type RunRef, useLog } from "@/lib/client"
 import { useQueryParam, useRunRef } from "@/lib/router"
-import { clock } from "@/lib/time"
-import type { LogLine } from "@/lib/types"
+import { clock, took } from "@/lib/time"
+import type { LogLine, TestState } from "@/lib/types"
 
 const FIRST_INDEX = 1_000_000_000 // Virtuoso's index of the first loaded line; older lines get smaller ones
 
@@ -49,6 +58,23 @@ function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
   const log = useLog(ref, target)
   const list = useRef<VirtuosoHandle>(null)
   const [atBottom, setAtBottom] = useState(true)
+  // the end of the log is followed until it's scrolled up (new lines only ever move it down)
+  const stick = useRef(true)
+  const scrollTop = useRef(0)
+  const scroller = (element: HTMLElement | Window | null) => {
+    if (!(element instanceof HTMLElement)) return
+    element.onscroll = () => {
+      if (element.scrollTop < scrollTop.current - 1) stick.current = false
+      scrollTop.current = element.scrollTop
+    }
+  }
+  const status = log.refreshing ? undefined : log.test?.status // changes seen live only, not since it was cached
+  const before = useRef(status)
+  useEffect(() => {
+    if (status === "passed" && (before.current === "running" || before.current === "pending"))
+      confetti({ particleCount: 150, spread: 90, origin: { y: 0.3 } })
+    before.current = status
+  }, [status])
   const [settledAtBottom] = useDebouncedValue(atBottom, 400) // no flashing "Latest" while loading
   const [search, setSearch] = useQueryParam("search")
   const [debouncedSearch] = useDebouncedValue(search ?? "", 150)
@@ -121,16 +147,10 @@ function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
         </Group>
         <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
           {test && <FailureNavigation run={ref} test={test} />}
-          {log.test && (
-            <Badge size="lg" color={COLORS[log.test.status]} style={{ flexShrink: 0 }}>
-              {log.test.status === "running"
-                ? `running ${Math.round((log.test.progress ?? 0) * 100)}%`
-                : log.test.status}
-            </Badge>
-          )}
+          {log.refreshing && log.loaded && <Loader size="xs" />}
+          {log.test && <TestStatus test={log.test} />}
         </Group>
       </Group>
-      {log.test?.exception && <Traceback traceback={log.test.exception} />}
       <Group gap="xs">
         <Chip.Group
           multiple
@@ -231,12 +251,16 @@ function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
         ) : (
           <Virtuoso
             ref={list}
-            key={filterKey}
+            key={`${filterKey}|${log.tailStart}`} // from the end again when the whole log is sent again
+            scrollerRef={scroller}
             data={shown}
             firstItemIndex={firstItemIndex}
             initialTopMostItemIndex={Math.max(0, shown.length - 1)}
-            followOutput={(bottom) => bottom && "auto"}
-            atBottomStateChange={setAtBottom}
+            followOutput={() => stick.current && "auto"}
+            atBottomStateChange={(bottom) => {
+              setAtBottom(bottom)
+              if (bottom) stick.current = true
+            }}
             startReached={() => log.start > 0 && log.loadOlder()}
             increaseViewportBy={400}
             computeItemKey={(_, line) => line.offset}
@@ -290,7 +314,10 @@ function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
               size="xs"
               radius="xl"
               leftSection={<IconArrowDown size={14} />}
-              onClick={() => list.current?.scrollToIndex({ index: "LAST", behavior: "smooth" })}
+              onClick={() => {
+                stick.current = true
+                list.current?.scrollToIndex({ index: "LAST", behavior: "smooth" })
+              }}
             >
               Latest
             </Button>
@@ -303,5 +330,29 @@ function LogView({ run: ref, target }: { run: RunRef; target: LogTarget }) {
         onClose={() => setExpanded(undefined)}
       />
     </Stack>
+  )
+}
+
+const ICONS = { passed: IconCheck, failed: IconX, skipped: IconPlayerSkipForward, pending: IconClock }
+
+/** A test's status, big: how long it took, why it was skipped, or how far along it is. */
+function TestStatus({ test }: { test: TestState }) {
+  const Icon = test.status === "running" ? undefined : ICONS[test.status]
+  const label =
+    test.status === "running"
+      ? `Running${test.progress ? ` ${Math.round(test.progress * 100)}%` : ""}`
+      : `${test.status[0].toUpperCase()}${test.status.slice(1)}${test.end && test.start ? ` in ${took(test.start, test.end)}` : ""}`
+  return (
+    <Tooltip label={test.reason} disabled={!test.reason}>
+      <Badge
+        size="xl"
+        radius="sm"
+        color={COLORS[test.status]}
+        leftSection={Icon ? <Icon size={18} stroke={3} /> : <Loader size={14} color="white" />}
+        style={{ flexShrink: 0, textTransform: "none" }}
+      >
+        {label}
+      </Badge>
+    </Tooltip>
   )
 }

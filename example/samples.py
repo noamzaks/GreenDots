@@ -211,7 +211,7 @@ def logs(root: Path) -> None:
 
 
 def live(root: Path) -> None:
-    """Writes runs into DIR/live forever, as a real one would: each takes a few minutes, then a pause."""
+    """Writes runs into DIR/live forever, as a real one would: tests take a while and log as they go."""
     base = root / "live"
     for number in range(len(list(base.glob("live-*"))) + 1, 1_000_000):
         directory = base / f"live-{number}"
@@ -226,28 +226,50 @@ def live(root: Path) -> None:
         (directory / "plan.json").write_text(json.dumps(plan | {"groups": groups, "errors": []}))
         queues = [tests[w::workers] for w in range(workers)]
         status = [(directory / f"status.{w}.jsonl").open("a", buffering=1) for w in range(workers)]
-        while any(queues):
-            for worker, queue in enumerate(queues):
-                if not queue or random.random() < 0.5:
+        running: list[tuple[str, int, int] | None] = [None] * workers  # test, steps done, steps
+        while any(queues) or any(running):
+            for worker in range(workers):
+                if running[worker] is None and queues[worker]:
+                    test_id = str(queues[worker].pop(0)["id"])
+                    status[worker].write(line(type="start", test=test_id, time=time.time()))
+                    running[worker] = (test_id, 0, random.randint(4, 30))
+                current = running[worker]
+                if current is None:
                     continue
-                test = queue.pop(0)
-                test_id = str(test["id"])
-                status[worker].write(line(type="start", test=test_id, time=time.time()))
+                test_id, done, steps = current
                 with (directory / log_name(test_id)).open("a") as log:
-                    for i in range(random.randint(1, 5)):
-                        log.write(line(name="live", level="INFO", time=time.time(), message=f"step {i}"))
-                outcome = "failed" if random.random() < 0.08 else "passed"
-                exception = {"exception": "AssertionError: flaky"} if outcome == "failed" else {}
+                    for _ in range(random.randint(1, 4)):
+                        level = random.choice(LEVELS)
+                        message = (
+                            f"\x1b[36mstep {done}\x1b[0m: {random.choice(ERRORS)}"
+                            if level == "ERROR"
+                            else f"step {done}"
+                        )
+                        log.write(line(name="live", level=level, time=time.time(), message=message))
                 status[worker].write(
-                    line(type="call", test=test_id, outcome=outcome, time=time.time(), **exception)
+                    line(type="progress", test=test_id, percentage=(done + 1) / steps, time=time.time())
+                )
+                if done + 1 < steps:
+                    running[worker] = (test_id, done + 1, steps)
+                    continue
+                outcome = "failed" if random.random() < 0.1 else "passed"
+                exception = TRACEBACK.format(
+                    name="test", arg=test_id, code=1, error=random.choice(ERRORS), module="live", line=42
+                )
+                extra = (
+                    {"exception": "\n".join([exception] * 20)} if outcome == "failed" else {}
+                )  # a long one
+                status[worker].write(
+                    line(type="call", test=test_id, outcome=outcome, time=time.time(), **extra)
                 )
                 status[worker].write(line(type="finish", test=test_id, outcome=outcome, time=time.time()))
-            time.sleep(4)
+                running[worker] = None
+            time.sleep(0.5)
         for file in status:
             file.write(line(type="session_finish", exitstatus=0, time=time.time()))
             file.close()
         print(f"live: live-{number} done")
-        time.sleep(300)
+        time.sleep(120)
 
 
 def main() -> None:

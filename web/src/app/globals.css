@@ -29,6 +29,14 @@
 :root[data-mantine-color-scheme="dark"] {
   --mantine-color-dimmed: var(--mantine-color-dark-1);
 }
+
+/* native scrollbars and form controls in the scheme's colors */
+:root[data-mantine-color-scheme="light"] {
+  color-scheme: light;
+}
+:root[data-mantine-color-scheme="dark"] {
+  color-scheme: dark;
+}
 :root[data-mantine-color-scheme="light"] .mantine-Badge-root[data-variant="light"] {
   color: color-mix(in srgb, var(--badge-color) 65%, black);
 }
