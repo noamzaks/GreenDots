@@ -397,6 +397,7 @@ function RunView(ref: RunRef) {
             gridTemplateColumns: `${layout.labels ? `${layout.labels}px` : "fit-content(320px)"} max-content`,
             gap: "24px 12px",
             alignContent: "start",
+            position: "relative", // so the matrices' visually hidden elements can't make the page scroll too
             overflow: "auto",
             flex: 1,
             minHeight: 0,
