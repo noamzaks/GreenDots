@@ -20,7 +20,7 @@ export const Config = z.object({
       slowAfter: seconds(600),
       /** Runs that haven't changed for this long aren't checked anymore, unless asked to. */
       stopAfter: seconds(3600),
-      /** How long listings of viewed projects, or ones with runs in progress, are cached... */
+      /** How long listings of viewed or synced projects, or ones with runs in progress, are cached... */
       list: seconds(10),
       /** ... and of other projects and of the sources. */
       browse: seconds(300),

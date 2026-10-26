@@ -254,6 +254,29 @@ describe("Store", () => {
     expect(store.fs.ops).toBe(ops)
   })
 
+  test("new runs of synced projects, and of projects on an open home page, show up within `list`", async () => {
+    finishAll(makeRun("local", "synced", "old"))
+    makeRun("local", "shown", "old")
+    const store = makeStore({ synced: ["synced"], polling: { list: 0.001, browse: 1000 } })
+    const tick = async () => {
+      await sleep(5)
+      store.tick()
+      await store.settled()
+    }
+    await tick()
+    await tick()
+    makeRun("local", "synced", "new")
+    await tick()
+    expect(store.listRuns("synced").runs.map((run) => run.name)).toContain("new")
+    makeRun("local", "shown", "new")
+    await tick()
+    expect(store.listRuns("shown").runs.map((run) => run.name)).not.toContain("new") // nobody looks
+    store.view("")
+    await tick()
+    await tick()
+    expect(store.listRuns("shown").runs.map((run) => run.name)).toContain("new")
+  })
+
   test("the home page reads no runs of projects that aren't synced", async () => {
     makeRun("local", "p", "r")
     const store = makeStore()

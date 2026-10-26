@@ -44,7 +44,12 @@ const FIELDS: Field[] = [
     unit: "s",
     help: "Until asked to check again",
   },
-  { section: "polling", key: "list", label: "List viewed projects, or ones with runs in progress, every", unit: "s" },
+  {
+    section: "polling",
+    key: "list",
+    label: "List viewed or synced projects, or ones with runs in progress, every",
+    unit: "s",
+  },
   { section: "polling", key: "browse", label: "List other projects and sources every", unit: "s" },
   { section: "polling", key: "recentRuns", label: "Latest runs kept up to date per synced project", unit: "" },
   { section: "filesystem", key: "concurrency", label: "Operations on the sources at a time", unit: "" },

@@ -142,7 +142,8 @@ export class Store {
   /** A project's runs in every source, newest first. Each run directory is stat-ed once, for sorting. */
   listRuns(project: string): { runs: RunInfo[]; loading: boolean } {
     if (!isName(project)) return { runs: [], loading: false }
-    const busy = this.viewed(project) || this.active(project) // else new runs show up within `browse`
+    // shown, synced or running: new runs show up within `list`, else within `browse`
+    const busy = this.viewed(project) || this.viewed("") || this.config.synced.includes(project) || this.active(project)
     let loading = false
     const runs = this.config.sources.flatMap((source) => {
       if (!this.sourceProjects(source).value?.includes(project)) return []

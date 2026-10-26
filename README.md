@@ -289,7 +289,7 @@ The Activity page shows every filesystem operation. The rules:
 - **Syncing reads only the latest runs**: a synced project's `polling.recentRuns` (5) latest runs are kept up to date,
   whether or not any page is open; its older runs are read only when they're opened.
 - **Listings come from a cache** and are refreshed in the background: every `polling.list` seconds for projects
-  being viewed or with runs in progress, every `polling.browse` for the rest. Each run directory is `stat`-ed once,
+  being viewed (on their page or the home page), synced or with runs in progress, every `polling.browse` for the rest. Each run directory is `stat`-ed once,
   ever: its mtime is kept in the disk cache.
 - **Runs are read from the share once.** A run that finished or stopped is kept on disk whole, in `cache.dir`
   (default: `~/.cache/greendots`), up to `cache.size` MB, the runs used least recently going first, with how far
