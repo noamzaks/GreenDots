@@ -9,7 +9,7 @@ import { apis, COLORS, pages, useStream } from "@/lib/client"
 import { plural } from "@/lib/format"
 import { useProgressive } from "@/lib/progressive"
 import { useParam } from "@/lib/router"
-import { ago, took } from "@/lib/time"
+import { ago, took, useNow } from "@/lib/time"
 import { useTitle } from "@/lib/titles"
 import type { ProjectRuns } from "@/lib/types"
 
@@ -19,6 +19,7 @@ export default function ProjectPage() {
   const project = useParam("project")
   const [, navigate] = useLocation()
   const { data, error, refreshing } = useStream<ProjectRuns>(apis.project(project))
+  useNow()
   useDocumentTitle(`${data?.title ?? project} · GreenDots`)
   useTitle(pages.project(project), data?.title)
   const { count, sentinel } = useProgressive(data?.runs.length ?? 0)

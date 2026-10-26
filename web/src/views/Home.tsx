@@ -8,7 +8,7 @@ import { Link } from "wouter"
 import { ProjectActions, usePins } from "@/components/ProjectActions"
 import { RunBar } from "@/components/RunBar"
 import { pages, useStream } from "@/lib/client"
-import { ago } from "@/lib/time"
+import { ago, useNow } from "@/lib/time"
 import type { ProjectInfo, Projects } from "@/lib/types"
 
 function ProjectCard({ project }: { project: ProjectInfo }) {
@@ -66,6 +66,7 @@ function ProjectCard({ project }: { project: ProjectInfo }) {
 
 export default function Home() {
   const { data, error, refreshing } = useStream<Projects>("/api/projects")
+  useNow()
   const [search, setSearch] = useState("")
   const [pins] = usePins()
   useDocumentTitle("GreenDots")
